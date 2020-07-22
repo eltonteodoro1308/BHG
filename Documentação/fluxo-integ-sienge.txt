@@ -1,0 +1,72 @@
+***Pedidos de Compras
+
+- Busca Cadastro de Empresas
+- Mosta lista de objetos das empresas retornadas com as empresas filiais correspondentes no protheus
+- Busca Dados Cabeçalho dos Pedidos de Compras
+- Busca Dados do Fornecedor
+- Busca Dados dos itens do pedido de Compras
+- Separa pedidos por Empresa/Filial de Processamento
+- Busca Adiantamentos 
+- Separa adiantamentos por Empresa/Filial de Processamento
+- Estrutura objetos da Lista Processamento:
+
+
+{{
+  "ListaProc": [
+    {
+      "cnpj": "",
+      "SM0_CODIGO": "",
+      "SM0_CODFIL": "",
+      "PEDIDOS": [
+        {
+          "C7_NUM": "",
+          "C7_EMISSAO": "",
+          "C7_FORNECE": "",
+          "C7_LOJA": "",
+          "C7_COND": "",
+          "C7_CONAPRO": "",
+          "C7_XNUMSIE": "",
+          "C7_OBS": "",
+          "C7_TPFRETE": "",
+          "C7_FRETE": "",
+          "id": "",
+          "supplierId": "",
+          "cnpj": "",
+          "ITENS": [
+            {
+              "C7_ITEM": "",
+              "C7_PRODUTO": "",
+              "C7_DESCRI": "",
+              "C7_QUANT": "",
+              "C7_PRECO": "",
+              "C7_TOTAL": "",
+              "C7_OBSM": "",
+              "C7_LOCAL": "",
+              "C7_CC": "",
+              "C7_ITEMCTA": "",
+              "C7_CONTA": "",
+              "resourceId": ""
+            }
+          ]
+        }
+      ],
+      "ADIANTAMENTOS": [
+        {
+          "E2_PREFIXO": "",
+          "E2_NUM": "",
+          "E2_TIPO": "",
+          "E2_NATUREZ": "",
+          "E2_FORNECE": "",
+          "E2_LOJA": "",
+          "E2_EMISSAO": "",
+          "E2_VENCTO": "",
+          "E2_VENCREA": "",
+          "E2_VALOR": "",
+          "AUTBANCO": "",
+          "AUTAGENCIA": "",
+          "AUTCONTA": ""
+        }
+      ]
+    }
+  ]
+}

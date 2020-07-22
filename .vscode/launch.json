@@ -1,0 +1,120 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "totvs_language_debug",
+			"request": "launch",
+			"name": "Totvs Language Debug",
+			"program": "${command:AskForProgramName}",
+			"cwb": "${workspaceFolder}",
+			"smartclientBin": "C:\\TOTVS\\SmartClient\\smartclient.exe",
+			"isMultiSession": true,
+			"enableTableSync": true
+		}
+	],
+	"lastPrograms": [
+		{
+			"args": [],
+			"label": "SIGAMDI",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "SIGACFG",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "APSDU",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "u_Sienge",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "u_TstRest",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "MYRELEASE",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "u_tstjson",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "u_tst",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "SIGACOM",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_TSTPEDCOM",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_CPOSOBG",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_TSPEDCOM",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_TSTSIENGE",
+			"description": ""
+		},
+		{
+			"args": [
+				"()"
+			],
+			"label": "u_tstpriv",
+			"description": "()"
+		},
+		{
+			"args": [],
+			"label": "u_tstpriv",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "F450OWN1",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_F450OWN1",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "SIGA",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_SIENGEV2",
+			"description": ""
+		}
+	],
+	"lastProgramExecuted": "U_SIENGEV2"
+}
