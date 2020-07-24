@@ -3,6 +3,7 @@
 - Cadastrar parâmetro SIE_PEDREF
 - Cadastrar parâmetro SIE_ADTREF
 - Cadastrar parâmetro SIE_ADTNAT
+- Cadastrar parâmetro SIE_CONDPG
 - Cadastrar indice Pedido de Compra NUMSIENGE
 - Cadastrar indice Condição de pagamento CODSIENGE
 - Cadastrar indice Produto CODSIENGE
@@ -52,8 +53,8 @@ user function SiengeV2( aParam )
 
         if RpcSetEnv( aCodFil[nX]["M0_CODIGO"], aCodFil[nX]["M0_CODFIL"] )
 
-            //GetPedidos(aCodFil[nX]["id"])
-            GetAdiant(aCodFil[nX]["id"])
+            GetPedidos(aCodFil[nX]["id"])
+            //GetAdiant(aCodFil[nX]["id"])
 
             RpcClearEnv()
 
@@ -73,9 +74,6 @@ user function SiengeV2( aParam )
 
     next nX
 
-    //TODO incrementar o parâmetro SIE_PEDREF
-    //TODO incrementar o parâmetro SIE_ADTREF
-
 return
 
 /*/{Protheus.doc} GetEmpresas
@@ -92,7 +90,8 @@ static function GetEmpresas()
     Local aResult   := nil
     Local nX        := 0
 
-    aResult := fetch( cPath,, 'Empresas' )
+    aResult := Eval( {|| cJson:=memoread('C:\Temp\sienge\empresas.json'),oJson:=JsonObject():new(),oJson:FromJson(cjson),ojson['results']} )
+    //XXX aResult := fetch( cPath,, 'Empresas' )
 
     if ! Empty( aResult )
 
@@ -144,26 +143,26 @@ static function GetCodFil( aCodFil  )
 
         oDbAccess:NewAlias( "SELECT M0_CODIGO, M0_CODFIL, M0_CGC FROM SYS_COMPANY WHERE D_E_L_E_T_ = ' '", cTmp )
 
+        Do While ! SM0->( Eof() )
+
+            nPos := aScan( aCodFil , { |Item| Item["cnpj"] == AllTrim( SM0->M0_CGC ) } )
+
+            if nPos # 0
+
+                aCodFil [ nPos ]["M0_CODIGO"] := AllTrim( SM0->M0_CODIGO )
+                aCodFil [ nPos ]["M0_CODFIL"] := AllTrim( SM0->M0_CODFIL )
+
+            end if
+
+            SM0->( DbSkip() )
+
+        End Do
+
     else
 
         MyConOut( 'Erro na conexão com banco de dados para consulta de dados da empresa na base de dados Erro => ' + oDbAccess:ErrorMessage() )
 
     end if
-
-    Do While ! SM0->( Eof() )
-
-        nPos := aScan( aCodFil , { |Item| Item["cnpj"] == AllTrim( SM0->M0_CGC ) } )
-
-        if nPos # 0
-
-            aCodFil [ nPos ]["M0_CODIGO"] := SM0->M0_CODIGO
-            aCodFil [ nPos ]["M0_CODFIL"] := SM0->M0_CODFIL
-
-        end if
-
-        SM0->( DbSkip() )
-
-    End Do
 
     oDbAccess:CloseConnection()
     oDbAccess:Finish()
@@ -199,22 +198,17 @@ static function GetPedidos( nIdEmpresa )
     Local aResult    := nil
     Local nX         := 0
     Local cQuery     := ''
-    Local dDateRef   := GetMv( 'SIE_PEDREF' )
-    Local cYearRef   := cValToChar( Year( dDateRef )  )
-    Local cMonthRef  := StrZero( Month( dDateRef ), 2 )
-    Local cDayRef    := StrZero( Day( dDateRef ), 2 )
-    Local cStartDate := cYearRef + '-' + cMonthRef + '-' +cDayRef // formato yyyy-MM-dd
-    Local cEndDate   := cStartDate // formato yyyy-MM-dd
-
+    Local nDateRef   := GetMv( 'SIE_PEDREF' )
+    Local cStartDate := DateFormat( Date() - nDateRef )
+    Local cEndDate   := DateFormat( Date() )
     Local cIdPedido  := ''
     Local cIdFornec  := ''
-
     Local cNum       := ''
-    Local dEmissao   := ''
+    Local dEmissao   := stod('')
     Local cCodForn   := ''
     Local cCodLoja   := ''
     Local cTpFrete   := ''
-    Local nFrete     := ''
+    Local cCondic    := ''
     Local cCC        := ''
     Local cItCtb     := ''
 
@@ -226,68 +220,61 @@ static function GetPedidos( nIdEmpresa )
     cQuery += cEndDate
     cQuery += '&buildingId='
     cQuery += cValToChar( nIdEmpresa )
+    cQueyr := '&status=PENDING'
+    cQueyr := '&authorized=true'
 
     aResult := fetch( cPath, cQuery, 'Pedidos de Compras' )
 
     for nX := 1 to len( aResult )
 
-        if aResult[nX]['authorized'] .And. aResult[nX]['status'] == 'PENDING'
+        cIdPedido := cValTochar( aResult[nX]['id'] )
 
-            cIdPedido := cValTochar( aResult[nX]['id'] )
+        // Verifica se Pedido já está na cadastrado
+        DbSelectArea( 'SC7' )
+        SC7->( DBOrderNickname( 'NUMSIENGE' ) ) // C7_FILIAL+C7_XNUMSIE
+        if ! SC7->( DbSeek( xFilial() + cIdPedido ) )
 
-            // Verifica se Pedido já está na cadastrado
-            DbSelectArea( 'SC7' )
-            SC7->( DBOrderNickname( 'NUMSIENGE' ) ) // C7_FILIAL+C7_XNUMSIE
-            if ! SC7->( DbSeek( xFilial() + cIdPedido ) )
+            cIdFornec  := cValTochar( aResult[nX]['supplierId'] )
 
-                cIdFornec  := cValTochar( aResult[nX]['supplierId'] )
+            // Verifica se fornecedor está cadastrado e em caso positivo popula as variáveis de Código e Loja
+            if BuscaForn( cIdFornec, @cCodForn, @cCodLoja )
 
-                // Verifica se fornecedor está cadastrado e em caso positivo popula as variáveis de Código e Loja
-                if BuscaForn( cIdFornec, @cCodForn, @cCodLoja )
+                // TODO Pedidos vindo do sienge com centros de custos nao cadastrados ou sinteticos
+                cCC      := '31103'//XXX cValTochar( aResult[nX]['costCenterId'] )
+                // TODO Pedidos vindo do sienge com itens contabeis nao cadastrados ou sinteticos
+                // TODO buildingId e equivalente a Item contabil ?
+                cItCtb   := '01001'//XXX cValTochar( aResult[nX]['buildingId'] )
 
-                    // TODO Pedidos vindo do sienge com centros de custos nao cadastrados ou sinteticos
-                    cCC      := '31103'//cValTochar( aResult[nX]['costCenterId'] )
-                    // TODO Pedidos vindo do sienge com itens contabeis nao cadastrados ou sinteticos
-                    // TODO buildingId e equivalente a Item contabil ?
-                    cItCtb   := '01001'//cValTochar( aResult[nX]['buildingId'] )
+                // Busca itens do pedido e se os mesmos exitirem no cadastro de produtos popula aListaPC com dados de Cabeçalho e Itens
+                If GetItens( cIdPedido, cCC, cItCtb, @aListaPC )
 
-                    // Busca itens do pedido e se os mesmos exitirem no cadastro de produtos popula aListaPC com dados de Cabeçalho e Itens
-                    If GetItens( cIdPedido, cCC, cItCtb, @aListaPC )
+                    cNum     := GetNumSC7() //NextNumero( 'SC7', 1, 'C7_NUM', .T. )
+                    dEmissao := StoD( StrTran( aResult[nX]['date'], '-', '' ) )
+                    cCondic  := GetMv( 'SIE_CONDPG' )
+                    cOBs     := cIdPedido + '/' + aResult[nX]['buyerId']
+                    cTpFrete := 'F'
 
-                        cNum     := GetNumSC7() //NextNumero( 'SC7', 1, 'C7_NUM', .T. )
-                        dEmissao := StoD( StrTran( aResult[nX]['date'], '-', '' ) )
-                        cTpFrete := 'F'
-                        nFrete   :=  0 //TODO Soma a propriedade freightunitprice dos itens para compor o frete ? // aResult[nX]['increase']
+                    aadd( aTail( aListaPC )[ 1 ], { "C7_NUM"     , cNum      } )
+                    aadd( aTail( aListaPC )[ 1 ], { "C7_EMISSAO" , dEmissao  } )
+                    aAdd( aTail( aListaPC )[ 1 ], { "C7_FORNECE" , cCodForn  } )
+                    aAdd( aTail( aListaPC )[ 1 ], { "C7_LOJA"    , cCodLoja  } )
+                    aAdd( aTail( aListaPC )[ 1 ], { "C7_COND"    , cCondic   } )
+                    aAdd( aTail( aListaPC )[ 1 ], { "C7_CONAPRO" , 'L'       } )
+                    aAdd( aTail( aListaPC )[ 1 ], { "C7_XNUMSIE" , cIdPedido } )
+                    aAdd( aTail( aListaPC )[ 1 ], { "C7_OBS"     , cOBs      } )
+                    aAdd( aTail( aListaPC )[ 1 ], { "C7_TPFRETE" , cTpFrete  } )
 
-                        aadd( aTail( aListaPC )[ 1 ], { "C7_NUM"     , cNum      } )
-                        aadd( aTail( aListaPC )[ 1 ], { "C7_EMISSAO" , dEmissao  } )
-                        aAdd( aTail( aListaPC )[ 1 ], { "C7_FORNECE" , cCodForn  } )
-                        aAdd( aTail( aListaPC )[ 1 ], { "C7_LOJA"    , cCodLoja  } )
-                        //TODO Verificar a condição de pagamento no Fornecedor aAdd( aTail( aListaPC )[ 1 ], { "C7_COND"    , cCondic   } )
-                        aAdd( aTail( aListaPC )[ 1 ], { "C7_CONAPRO" , 'L'       } )
-                        aAdd( aTail( aListaPC )[ 1 ], { "C7_XNUMSIE" , cIdPedido } )
-                        // TODO O item do pedido de compras ja tem Observacao e o cabecalhao nao, considera mesmo este item ?
-                        aAdd( aTail( aListaPC )[ 1 ], { "C7_OBS"     , ''        } )
-                        aAdd( aTail( aListaPC )[ 1 ], { "C7_TPFRETE" , cTpFrete  } )
-                        aAdd( aTail( aListaPC )[ 1 ], { "C7_FRETE"   , nFrete    } )
-
-                    end
-
-                else
-
-                    MyConOut( 'Fornecedore não localizado na base pedido id: ' + cIdPedido )
-
-                end if
+                end
 
             else
 
-                MyConOut( 'Pedido já cadastrado na base id: ' + cIdPedido )
+                MyConOut( 'Fornecedor não localizado na base pedido id: ' + cIdPedido )
 
             end if
 
         else
 
-            MyConOut( 'Pedido não autorizado ou com status diferente de "PENDING" id: ' + cIdPedido )
+            MyConOut( 'Pedido já cadastrado na base id: ' + cIdPedido )
 
         end if
 
@@ -318,6 +305,9 @@ static function GravaPedidos( aListaPC )
 
     Local nX        := 0
     Local cIdSienge := ''
+    Local cObs      := ''
+    Local cNum      := ''
+    Local aAreaSC7  := SC7->( GetArea() )
 
     Private lMsErroAuto    := .F.
     Private lMsHelpAuto    := .T.
@@ -326,6 +316,8 @@ static function GravaPedidos( aListaPC )
     for nX := 1 To Len( aListaPC )
 
         cIdSienge := aListaPC[nX][1][aScan( aListaPC[ nX, 1 ], { | X | X[1] == 'C7_XNUMSIE' } )][2]
+        cObs      := aListaPC[nX][1][aScan( aListaPC[ nX, 1 ], { | X | X[1] == 'C7_OBS'     } )][2]
+        cNum      := aListaPC[nX][1][aScan( aListaPC[ nX, 1 ], { | X | X[1] == 'C7_NUM'     } )][2]
 
         Begin Transaction
 
@@ -336,19 +328,31 @@ static function GravaPedidos( aListaPC )
                 lMsErroAuto := .F.
 
                 MyConOut( 'Erro na inclusão do pedido de compra id: ' + cIdSienge )
-                MyConout( MsgErro( GetAutoGRLog() ) )
+                MsgErro( GetAutoGRLog() )
 
                 DisarmTransaction()
 
             else
 
-                RecLock('SC7',.F.)
+                if SC7->( DbSeek( xFilial() + cNum ) )
 
-                SC7->C7_XNUMSIE := cIdSienge
-                SC7->C7_CONAPRO := 'L'
+                    Do While SC7->( ! Eof() .And. C7_FILIAL + C7_NUM == xFilial() + cNum )
 
-                MsUnlock()
+                        RecLock( 'SC7', .F. )
 
+                        SC7->C7_XNUMSIE := cIdSienge
+                        SC7->C7_CONAPRO := 'L'
+                        SC7->C7_OBS     := cObs
+
+                        SC7->( MsUnlock() )
+
+                        SC7->( DbSkip() )
+
+                    End Do
+
+                end if
+
+                SC7->( RestArea( aAreaSC7 ) )
 
             End If
 
@@ -386,7 +390,7 @@ static function BuscaForn( cIdFornec, cCodForn, cCodLoja )
         cCnpj := StrTran( cCnpj         , '/', '' )
         cCnpj := StrTran( cCnpj         , '-', '' )
 
-        if SA2->( DbSeek( xFilial() + cCnpj ) )
+        if ! Empty( cCnpj ) .And. SA2->( DbSeek( xFilial() + cCnpj ) )
 
             cCodForn := SA2->A2_COD
             cCodLoja := SA2->A2_LOJA
@@ -502,12 +506,9 @@ Busca no Web Service do Sienge do adiantamentos
 static function GetAdiant( nIdEmpresa )
 
     Local cPath      := cPrefix + 'bills'
-    Local dDateRef   := GetMv( 'SIE_ADTREF' )
-    Local cYearRef   := cValToChar( Year( dDateRef )  )
-    Local cMonthRef  := StrZero( Month( dDateRef ), 2 )
-    Local cDayRef    := StrZero( Day( dDateRef ), 2 )
-    Local cStartDate := cYearRef + '-' + cMonthRef + '-' +cDayRef // formato yyyy-MM-dd
-    Local cEndDate   := cStartDate // formato yyyy-MM-dd
+    Local nDateRef   := GetMv( 'SIE_ADTREF' )
+    Local cStartDate := DateFormat( Date() - nDateRef )
+    Local cEndDate   := DateFormat( Date() )
     Local cQuery     := ''
     Local aResult    := {}
     Local aAdiant    := {}
@@ -537,6 +538,9 @@ static function GetAdiant( nIdEmpresa )
 
         for nX := 1 to len( aResult )
 
+            DbSelectArea( 'SE2' )
+            DbSetOrder( 1 ) //E2_FILIAL+E2_PREFIXO+E2_NUM+E2_PARCELA+E2_TIPO+E2_FORNECE+E2_LOJA
+
             // Verifica se o título no Sienge é do tipo "ADI", somente este tipo é incluido
             if AllTrim( aResult[nX]['documentIdentificationId'] ) == 'ADI'
 
@@ -552,23 +556,33 @@ static function GetAdiant( nIdEmpresa )
                     cAgencia  := '1122'   // TODO Qual Agência do PA ?
                     cConta    := '112233' // TODO Qual Conta do PA ?
 
-                    aAdd( aAdiant, { "E2_PREFIXO" , "SIE"    , NIL } )
-                    aAdd( aAdiant, { "E2_NUM"     , cNum     , NIL } )
-                    aAdd( aAdiant, { "E2_TIPO"    , 'PA'     , NIL } )
-                    aAdd( aAdiant, { "E2_NATUREZ" , cNaturez , NIL } )
-                    aAdd( aAdiant, { "E2_FORNECE" , cCodForn , NIL } )
-                    aAdd( aAdiant, { "E2_LOJA"    , cCodLoja , NIL } )
-                    aAdd( aAdiant, { "E2_EMISSAO" , cData    , NIL } )
-                    aAdd( aAdiant, { "E2_VENCTO"  , cData    , NIL } )
-                    aAdd( aAdiant, { "E2_VENCREA" , cData    , NIL } )
-                    aAdd( aAdiant, { "E2_VALOR"   , nValor   , NIL } )
-                    aAdd( aAdiant, { "AUTBANCO"   , cBanco   , NIL } )
-                    aAdd( aAdiant, { "AUTAGENCIA" , cAgencia , NIL } )
-                    aAdd( aAdiant, { "AUTCONTA"   , cConta   , NIL } )
+                    if ! SE2->( DbSeek( xFilial() +;
+                     PadR( "SIE"    , TamSx3('E2_PREFIXO')[1] ) +;
+                     PadR( cNum     , TamSx3('E2_NUM'    )[1] ) +;
+                     PadR( ""       , TamSx3('E2_PARCELA')[1] ) +;
+                     PadR( "PA"     , TamSx3('E2_TIPO'   )[1] ) +;
+                     PadR( cCodForn , TamSx3('E2_FORNECE')[1] ) +;
+                     PadR( cCodLoja , TamSx3('E2_LOJA'   )[1] ) ) )
 
-                    aAdd( aListaAd, aClone( aAdiant ) )
+                        aAdd( aAdiant, { "E2_PREFIXO" , "SIE"    , NIL } )
+                        aAdd( aAdiant, { "E2_NUM"     , cNum     , NIL } )
+                        aAdd( aAdiant, { "E2_TIPO"    , 'PA'     , NIL } )
+                        aAdd( aAdiant, { "E2_NATUREZ" , cNaturez , NIL } )
+                        aAdd( aAdiant, { "E2_FORNECE" , cCodForn , NIL } )
+                        aAdd( aAdiant, { "E2_LOJA"    , cCodLoja , NIL } )
+                        aAdd( aAdiant, { "E2_EMISSAO" , cData    , NIL } )
+                        aAdd( aAdiant, { "E2_VENCTO"  , cData    , NIL } )
+                        aAdd( aAdiant, { "E2_VENCREA" , cData    , NIL } )
+                        aAdd( aAdiant, { "E2_VALOR"   , nValor   , NIL } )
+                        aAdd( aAdiant, { "AUTBANCO"   , cBanco   , NIL } )
+                        aAdd( aAdiant, { "AUTAGENCIA" , cAgencia , NIL } )
+                        aAdd( aAdiant, { "AUTCONTA"   , cConta   , NIL } )
 
-                    aSize( aAdiant, 0 )
+                        aAdd( aListaAd, aClone( aAdiant ) )
+
+                        aSize( aAdiant, 0 )
+
+                    end if
 
                 else
 
@@ -587,6 +601,8 @@ static function GetAdiant( nIdEmpresa )
         GravaAdiant( aListaAd )
 
     end if
+
+    SE2->( DbCloseArea() )
 
 return
 
@@ -622,7 +638,7 @@ static function GravaAdiant( aListaAd )
                 lMsErroAuto := .F.
 
                 MyConOut( 'Erro na inclusão do adiantamento id: ' + cIdSienge )
-                MyConout( MsgErro( GetAutoGRLog() ) )
+                MsgErro( GetAutoGRLog() )
 
                 DisarmTransaction()
 
@@ -736,33 +752,25 @@ static function fetch( cPath, cQuery, cConsulta )
 return uRet
 
 /*/{Protheus.doc} MsgErro
-Recebe array com erros do execauto e converte em uma string com as linhas do erro 
+Recebe array com erros do execauto e gera saida no console 
 @type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 09/07/2020
 @param aErro, array, Array com a mensagem de erro
-@return character, String resultante da conversão do array recebido
 /*/
 static function MsgErro( aErro )
 
-    Local cRet := ''
     Local nX   := 0
     Local nLen := Len( aErro )
 
     For nX := 1 To nLen
 
-        cRet += aErro[ nX ]
-
-        If nX < nLen
-
-            cRet += CRLF
-
-        End IF
+        MyConOut( aErro[ nX ] )
 
     Next nX
 
-Return cRet
+Return
 
 /*/{Protheus.doc} MyConOut
 Executa o rotina de conout com um prefixo indicando que se refere a uma mensagem de integração com o SIENGE
@@ -777,3 +785,21 @@ static function MyConOut( cMsg )
     ConOut( '[ SIENGE ] = > ' + cMsg )
 
 return
+
+/*/{Protheus.doc} DateFormat
+Formata uma data para uma string no formato yyyy-MM-dd aceito pelo SIENGE
+@type static function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 24/07/2020
+@param dDate, date, Data a ser convertida
+@return caractere, Data convertida no formato yyyy-MM-dd de string para integração com o SIENGE
+/*/
+static function DateFormat( dDate )
+
+    Local cYear  := cValToChar( Year( dDate )  )
+    Local cMonth := StrZero( Month( dDate ), 2 )
+    Local cDay   := StrZero( Day( dDate ), 2 )
+    Local cRet   := cYear + '-' + cMonth + '-' +cDay
+
+return cRet

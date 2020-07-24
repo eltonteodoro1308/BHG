@@ -24,3 +24,43 @@ User Function F450OWN()
     cString += " D_E_L_E_T_ = ' ' "
 
 Return cString
+
+/*/{Protheus.doc} CFINP081
+Função usada na pergunta do relatório para selecionar os tipos de cobrança
+@type user function
+@version 12.1.25
+@author elton.alves@totvs.com.br
+@since 03/07/2020
+@return logico, Fixo .T.
+/*/
+User Function CFINP081()
+
+    Local cTitulo  := 'Empresas/Filiais'
+    Local aOpcoes  := {}
+    Local cOpcoes  := ''
+    Local aArea    := GetArea()
+    Local MvPar    := &( Alltrim( ReadVar( ) ) ) // Carrega Nome da Variavel do Get em Questao
+    Local MvRet    := Alltrim( ReadVar( ) )      // Iguala Nome da Variavel ao Nome variavel de Retorno
+    Local nTam     := Len( AllTrim( SM0->M0_CODFIL ) )
+
+    DbSelectArea( 'SM0' )
+    SM0->( DbSetOrder( 1 ) )
+    SM0->( DbGoTop( ) )
+
+    Do While( SM0->( ! Eof( ) ) )
+
+        cOpcoes += AllTrim( SM0->M0_CODFIL )
+
+        aAdd( aOpcoes, SM0->( AllTrim( M0_CODFIL ) + ' - ' + AllTrim( M0_FILIAL ) ) )
+
+        SM0->( DbSkip( ) )
+
+    End Do
+
+    f_Opcoes( @MvPar, cTitulo, aOpcoes, cOpcoes,,, .F., nTam )
+
+    &MvRet := MvPar
+
+    RestArea( aArea )
+
+Return .T.

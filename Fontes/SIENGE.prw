@@ -154,20 +154,17 @@ static function GetListaPC( aListaPC, oJsonCabec )
 
     Local aArea     := GetArea()
     Local cIdPedido := cValTochar( oJsonCabec['id'] )
-    Local cIdCondic := cValtoChar( 1 ) 
+    Local cIdCondic := cValtoChar( 1 )
     Local cIdFornec := cValTochar( oJsonCabec['supplierId'] )
     Local dEmissao  := StoD( StrTran( oJsonCabec['date'], '-', '' ) )
     Local cNum      := ''
-    Local cTpFrete  := 'C' 
+    Local cTpFrete  := 'C'
     Local nFrete    :=  oJsonCabec['increase']
 
     Private cCodForn := ''
     Private cCodLoja := ''
     Private cCondic  := ''
-    // TODO Pedidos vindo do sienge com centros de custos nao cadastrados ou sinteticos
     Private cCC      := '99999' //cValTochar( oJsonCabec['costCenterId'] )
-    // TODO Pedidos vindo do sienge com itens contabeis nao cadastrados ou sinteticos
-    // TODO buildingId e equivalente a Item contabil ?
     Private cItCtb   := ''// cValTochar( oJsonCabec['buildingId'] )
     //Private aItens    := {}
 
@@ -198,7 +195,7 @@ static function GetListaPC( aListaPC, oJsonCabec )
                     aAdd( aTail( aListaPC )[ 1 ], { "C7_COND"    , cCondic   } )
                     aAdd( aTail( aListaPC )[ 1 ], { "C7_CONAPRO" , 'L'       } )
                     aAdd( aTail( aListaPC )[ 1 ], { "C7_XNUMSIE" , cIdPedido } )
-                    aAdd( aTail( aListaPC )[ 1 ], { "C7_OBS"     , ''        } ) // TODO O item do pedido de compras ja tem Observacao e o cabecalhao nao, considera mesmo este item ?
+                    aAdd( aTail( aListaPC )[ 1 ], { "C7_OBS"     , ''        } ) 
                     aAdd( aTail( aListaPC )[ 1 ], { "C7_TPFRETE" , cTpFrete  } )
                     aAdd( aTail( aListaPC )[ 1 ], { "C7_FRETE"   , nFrete    } )
 
@@ -607,9 +604,9 @@ static function GetListaAd( aListaAd, oJson )
     Local nValor    := oJson["totalInvoiceAmount"]
     Local cNaturez  := 'D32.01'
     Local cIdFornec := cValTochar( oJson['creditorId'] )
-    Local cBanco    := '237'    // TODO Qual o banco do PA ?
-    Local cAgencia  := '1122'   // TODO Qual Agência do PA ?
-    Local cConta    := '112233' // TODO Qual Conta do PA ?
+    Local cBanco    := '237'    
+    Local cAgencia  := '1122'   
+    Local cConta    := '112233' 
 
     Private cCodForn := ''
     Private cCodLoja := ''
@@ -679,8 +676,6 @@ static function GravaAdiant( aListaAd )
         End Transaction
 
     next nX
-
-    //TODO Verificar como buscar do Sienge o pedido de compras a ser vinculado ao adiantamento
 
 return
 
