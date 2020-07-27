@@ -22,7 +22,7 @@
  User Function MULTIBOL(cPrefix,cNumtit,cClie,cLoja)                             
      
 
-	Local	aPergs     := {} 
+	//Local	aPergs     := {} 
 	Private lExec      := .F.
 	Private cIndexName := ''
 	Private cIndexKey  := ''
@@ -191,8 +191,8 @@ User Function RF01B062(xBanco,xAgencia,xConta,xSubCt,lSetup,cNotIni,cNotFim,cSer
 	Local nI           := 1
 	Local aCB_RN_NN    := {}
 	Local nVlrAbat	   := 0
-	Local xSetup       := iif(lSetup==nil,.f.,lSetup)
-	Local nDvnn 	   := 0
+	//Local xSetup       := iif(lSetup==nil,.f.,lSetup)
+	//Local nDvnn 	   := 0
 
 	Private cBanco   := ""
 	Private cAgencia := ""
@@ -982,7 +982,7 @@ Return(_cRet)
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
-
+/*
 Static Function ValidPerg(cPrefix,cNumtit,cClie,cLoja)
 
 	Local _sAlias := Alias()
@@ -1039,7 +1039,7 @@ Static Function ValidPerg(cPrefix,cNumtit,cClie,cLoja)
 
 
 Return(cPrefix,cNumtit,cClie,cLoja)
-
+*/
 
 
 /*/
@@ -1068,11 +1068,11 @@ Static Function Impres2(oPrint,aDadosEmp,aDadosTit,aDadosBanco,aDatSacado,aBolTe
 	LOCAL oFont24
 	LOCAL nI := 0
 
-	LOCAL cMailDestino := Space(70)
-	LOCAL oMailDestino
-	LOCAL _oDlg
+	//LOCAL cMailDestino := Space(70)
+	//LOCAL oMailDestino
+	//LOCAL _oDlg
 
-	LOCAL cMsg 	       := " "
+	//LOCAL cMsg 	       := " "
 
 	Local cBitmap      := "\boletos\itau.bmp" //"\data\logos\santander.BMP"//"\SYSTEM\033.BMP" // Logo da empresa
     
