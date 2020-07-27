@@ -114,7 +114,12 @@
 			"args": [],
 			"label": "U_SIENGEV2",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "SIGAESP",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "SIGACFG"
+	"lastProgramExecuted": "SIGAESP"
 }
