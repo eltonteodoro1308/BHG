@@ -5,8 +5,11 @@
 - Cadastrar parâmetro SIE_ADTNAT
 - Cadastrar parâmetro SIE_CONDPG
 - Cadastrar indice Pedido de Compra NUMSIENGE
-- Cadastrar indice Condição de pagamento CODSIENGE
 - Cadastrar indice Produto CODSIENGE
+- Cadastrar indice Centro de Custo CODSIENGE -> CTT_FILIAL+CTT_XSIENG
+- Cadastrar indice Item Contábil CODSIENGE -> CTD_FILIAL+CTD_XSIENG
+- Cadastrar Campo CTT_XSIENG
+- Cadastrar Campo CTD_XSIENG
 
 */
 
@@ -31,6 +34,7 @@ aParam[ 4 ] => Id do agendamento
 user function SiengeV2( aParam )
 
     Local nX   := 0
+    Local nY   := 0
     Local cMsg := ''
 
     // Parâmetros utilizados por todos os End Points dos Web Service do SIENGE
@@ -53,8 +57,12 @@ user function SiengeV2( aParam )
 
         if RpcSetEnv( aCodFil[nX]["M0_CODIGO"], aCodFil[nX]["M0_CODFIL"] )
 
-            GetPedidos(aCodFil[nX]["id"])
-            //GetAdiant(aCodFil[nX]["id"])
+            for nY := 1 to len( aCodFil[nX]["buildings"] )
+
+                GetPedidos(aCodFil[nX]["buildings"][nY])
+                GetAdiant( aCodFil[nX]["buildings"][nY])
+
+            next nX
 
             RpcClearEnv()
 
@@ -86,12 +94,13 @@ caso a empresa não tenha o cnpj preenchido será desconsiderada
 /*/
 static function GetEmpresas()
 
-    Local cPath     := cPrefix + 'companies'
-    Local aResult   := nil
-    Local nX        := 0
+    Local cPath      := cPrefix + 'companies'
+    Local aResult    := nil
+    Local nX         := 0
+    Local aBuildings := {}
 
-    aResult := Eval( {|| cJson:=memoread('C:\Temp\sienge\empresas.json'),oJson:=JsonObject():new(),oJson:FromJson(cjson),ojson['results']} )
-    //XXX aResult := fetch( cPath,, 'Empresas' )
+    //XXX aResult := Eval( {|| cJson:=memoread('C:\Temp\sienge\empresas.json'),oJson:=JsonObject():new(),oJson:FromJson(cjson),ojson['results']} )
+    aResult := fetch( cPath,, 'Empresas' )
 
     if ! Empty( aResult )
 
@@ -99,21 +108,26 @@ static function GetEmpresas()
 
             if ! Empty( aResult[nX]["cnpj"] )
 
-                aAdd( aCodFil , JsonObject():New() )
+                aBuildings := GetProjetos( aResult[nX]["id"] )
 
-                aTail( aCodFil )["cnpj"]      := AllTrim( StrTran( StrTran( StrTran( aResult[nX]["cnpj"], '.', '' ), '/', '' ), '-' , '' ) )
-                aTail( aCodFil )["id"]        := aResult[nX]["id"]
-                aTail( aCodFil )["name"]      := aResult[nX]["name"]
-                aTail( aCodFil )["M0_CODIGO"] := ''
-                aTail( aCodFil )["M0_CODFIL"] := ''
+                if ! Empty( aBuildings )
+
+                    aAdd( aCodFil , JsonObject():New() )
+
+                    aTail( aCodFil )["cnpj"]      := AllTrim( StrTran( StrTran( StrTran( aResult[nX]["cnpj"], '.', '' ), '/', '' ), '-' , '' ) )
+                    aTail( aCodFil )["id"]        := aResult[nX]["id"]
+                    aTail( aCodFil )["name"]      := aResult[nX]["name"]
+                    aTail( aCodFil )["M0_CODIGO"] := ''
+                    aTail( aCodFil )["M0_CODFIL"] := ''
+                    aTail( aCodFil )["buildings"] := aClone( aBuildings )
+
+                end if
 
             end if
 
         next nX
 
     end if
-
-    aSize( aResult, 0 )
 
     GetCodFil( @aCodFil  )
 
@@ -183,15 +197,45 @@ static function GetCodFil( aCodFil  )
 
 return
 
+/*/{Protheus.doc} GetProjetos
+Busca no SIENGE a lista de id´s de projetos de uma empresa
+@type static function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 29/07/2020
+@param nIdEmpresa, number, Id da empresa a ser pesquisada
+@return array, Array com a lista de Projetos
+/*/
+static function GetProjetos( nIdEmpresa )
+
+    Local cPath   := cPrefix + 'enterprises'
+    Local cQuery  := ''
+    Local aRet    := {}
+    Local aResult := {}
+    Local nX      := 0
+
+    cQuery += '&companyId='
+    cQuery += cValToChar( nIdEmpresa )
+
+    aResult := fetch( cPath, cQuery, 'Projetos' )
+
+    for nX := 1 to Len( aResult )
+
+        aAdd( aRet, aResult[nX]['id'] )
+
+    next nX
+
+return aRet
+
 /*/{Protheus.doc} GetPedidos
 Busca lista de pedidos do Web service
 @type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 17/07/2020
-@param nIdEmpresa, numeric, Id da empresa correspondente aos pedidos a serem retornado pelo Web Service
+@param nIdProjeto, numeric, Id da empresa correspondente aos pedidos a serem retornado pelo Web Service
 /*/
-static function GetPedidos( nIdEmpresa )
+static function GetPedidos( nIdProjeto )
 
     Local aArea     := GetArea()
     Local cPath      := cPrefix + 'purchase-orders'
@@ -211,6 +255,8 @@ static function GetPedidos( nIdEmpresa )
     Local cCondic    := ''
     Local cCC        := ''
     Local cItCtb     := ''
+    Local nIdCC      := 0
+    Local nIdItCtb   := 0
 
     Private aListaPC := {}
 
@@ -219,7 +265,7 @@ static function GetPedidos( nIdEmpresa )
     cQuery += '&endDate='
     cQuery += cEndDate
     cQuery += '&buildingId='
-    cQuery += cValToChar( nIdEmpresa )
+    cQuery += cValToChar( nIdProjeto )
     cQueyr := '&status=PENDING'
     cQueyr := '&authorized=true'
 
@@ -239,32 +285,37 @@ static function GetPedidos( nIdEmpresa )
             // Verifica se fornecedor está cadastrado e em caso positivo popula as variáveis de Código e Loja
             if BuscaForn( cIdFornec, @cCodForn, @cCodLoja )
 
-                // TODO Pedidos vindo do sienge com centros de custos nao cadastrados ou sinteticos
-                cCC      := '31103'//XXX cValTochar( aResult[nX]['costCenterId'] )
-                // TODO Pedidos vindo do sienge com itens contabeis nao cadastrados ou sinteticos
-                // TODO buildingId e equivalente a Item contabil ?
-                cItCtb   := '01001'//XXX cValTochar( aResult[nX]['buildingId'] )
+                nIdCC    := aResult[nX]['costCenterId']
+                nIdItCtb := aResult[nX]['buildingId']
 
-                // Busca itens do pedido e se os mesmos exitirem no cadastro de produtos popula aListaPC com dados de Cabeçalho e Itens
-                If GetItens( cIdPedido, cCC, cItCtb, @aListaPC )
+                if BuscaCcIt( nIdCC, nIdItCtb, @cCC, @cItCtb )
 
-                    cNum     := GetNumSC7() //NextNumero( 'SC7', 1, 'C7_NUM', .T. )
-                    dEmissao := StoD( StrTran( aResult[nX]['date'], '-', '' ) )
-                    cCondic  := GetMv( 'SIE_CONDPG' )
-                    cOBs     := cIdPedido + '/' + aResult[nX]['buyerId']
-                    cTpFrete := 'F'
+                    // Busca itens do pedido e se os mesmos exitirem no cadastro de produtos popula aListaPC com dados de Cabeçalho e Itens
+                    If GetItens( cIdPedido, cCC, cItCtb, @aListaPC )
 
-                    aadd( aTail( aListaPC )[ 1 ], { "C7_NUM"     , cNum      } )
-                    aadd( aTail( aListaPC )[ 1 ], { "C7_EMISSAO" , dEmissao  } )
-                    aAdd( aTail( aListaPC )[ 1 ], { "C7_FORNECE" , cCodForn  } )
-                    aAdd( aTail( aListaPC )[ 1 ], { "C7_LOJA"    , cCodLoja  } )
-                    aAdd( aTail( aListaPC )[ 1 ], { "C7_COND"    , cCondic   } )
-                    aAdd( aTail( aListaPC )[ 1 ], { "C7_CONAPRO" , 'L'       } )
-                    aAdd( aTail( aListaPC )[ 1 ], { "C7_XNUMSIE" , cIdPedido } )
-                    aAdd( aTail( aListaPC )[ 1 ], { "C7_OBS"     , cOBs      } )
-                    aAdd( aTail( aListaPC )[ 1 ], { "C7_TPFRETE" , cTpFrete  } )
+                        cNum     := GetNumSC7() //NextNumero( 'SC7', 1, 'C7_NUM', .T. )
+                        dEmissao := StoD( StrTran( aResult[nX]['date'], '-', '' ) )
+                        cCondic  := GetMv( 'SIE_CONDPG' )
+                        cOBs     := cIdPedido + '/' + aResult[nX]['buyerId']
+                        cTpFrete := 'F'
 
-                end
+                        aadd( aTail( aListaPC )[ 1 ], { "C7_NUM"     , cNum      } )
+                        aadd( aTail( aListaPC )[ 1 ], { "C7_EMISSAO" , dEmissao  } )
+                        aAdd( aTail( aListaPC )[ 1 ], { "C7_FORNECE" , cCodForn  } )
+                        aAdd( aTail( aListaPC )[ 1 ], { "C7_LOJA"    , cCodLoja  } )
+                        aAdd( aTail( aListaPC )[ 1 ], { "C7_COND"    , cCondic   } )
+                        aAdd( aTail( aListaPC )[ 1 ], { "C7_CONAPRO" , 'L'       } )
+                        aAdd( aTail( aListaPC )[ 1 ], { "C7_XNUMSIE" , cIdPedido } )
+                        aAdd( aTail( aListaPC )[ 1 ], { "C7_OBS"     , cOBs      } )
+                        aAdd( aTail( aListaPC )[ 1 ], { "C7_TPFRETE" , cTpFrete  } )
+
+                    end if
+
+                else
+
+                    MyConOut( 'Centro de Custos e/ou item contábil não localizado na base Pedido de Compras: ' + cIdPedido )
+
+                end if
 
             else
 
@@ -405,6 +456,56 @@ static function BuscaForn( cIdFornec, cCodForn, cCodLoja )
     end if
 
     SA2->( DbCloseArea() )
+
+return lRet
+
+/*/{Protheus.doc} BuscaCcIt
+Busca o Centro de Custos e Item contábil correspondente ao ID recebido
+@type static function
+@version 12.1.17
+@author elton.alves@totvs.com.br
+@since 29/07/2020
+@param nIdCC, number, ID do Centro de custo a ser buscado na base
+@param nIdItCtb, number, ID do Item Contábil a ser buscado na base
+@param cCC, character, Variável recebida por referência a ser populada com o código do centro de custo correspondente ao ID recebido 
+@param cItCtb, character, Variável recebida por referência a ser populada com o código do item contábil correspondente ao ID recebido
+@return logical, Indica se o ID do centro de custo e item contábil foram localizados e as variáveis correspondentes foram populadas
+/*/
+static function BuscaCcIt( nIdCC, nIdItCtb, cCC, cItCtb )
+
+    Local lRet  := .T.
+    Local aArea := GetArea()
+
+    DbSelectArea( 'CTT' )
+    CTT->( DBOrderNickname( 'CODSIENGE' ) ) // CTT_FILIAL+CTT_XSIENG
+
+    if CTT->( DbSeek( xFilial() + cValToChaR( nIdCC ) ) )
+
+        cCC := CTT->CTT_CUSTO
+
+    else
+
+        lRet := .F.
+
+    end if
+
+    DbSelectArea( 'CTD' )
+    CTD->( DBOrderNickname( 'CODSIENGE' ) ) // CTD_FILIAL+CTD_XSIENG
+
+    if CTD->( DbSeek( xFilial() + cValToChaR( nIdItCtb ) ) )
+
+        cItCtb := CTD->CTD_CUSTO
+
+    else
+
+        lRet := .F.
+
+    end if
+
+    CTT->( DbCloseArea() )
+    CTD->( DbCloseArea() )
+
+    RestArea( aArea )
 
 return lRet
 
@@ -557,12 +658,12 @@ static function GetAdiant( nIdEmpresa )
                     cConta    := '112233' // TODO Qual Conta do PA ?
 
                     if ! SE2->( DbSeek( xFilial() +;
-                     PadR( "SIE"    , TamSx3('E2_PREFIXO')[1] ) +;
-                     PadR( cNum     , TamSx3('E2_NUM'    )[1] ) +;
-                     PadR( ""       , TamSx3('E2_PARCELA')[1] ) +;
-                     PadR( "PA"     , TamSx3('E2_TIPO'   )[1] ) +;
-                     PadR( cCodForn , TamSx3('E2_FORNECE')[1] ) +;
-                     PadR( cCodLoja , TamSx3('E2_LOJA'   )[1] ) ) )
+                            PadR( "SIE"    , TamSx3('E2_PREFIXO')[1] ) +;
+                            PadR( cNum     , TamSx3('E2_NUM'    )[1] ) +;
+                            PadR( ""       , TamSx3('E2_PARCELA')[1] ) +;
+                            PadR( "PA"     , TamSx3('E2_TIPO'   )[1] ) +;
+                            PadR( cCodForn , TamSx3('E2_FORNECE')[1] ) +;
+                            PadR( cCodLoja , TamSx3('E2_LOJA'   )[1] ) ) )
 
                         aAdd( aAdiant, { "E2_PREFIXO" , "SIE"    , NIL } )
                         aAdd( aAdiant, { "E2_NUM"     , cNum     , NIL } )

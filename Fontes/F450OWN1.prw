@@ -13,7 +13,16 @@ User Function F450OWN1()
 
     //lTitFuturo
 
-    cString +=   if( nDebCred == 2, " E1_FILIAL LIKE '" + SubStr( cFilAnt, 1, 2 ) + "%' AND ", "" )
+    if nDebCred == 1
+
+        cString := " E2_FILIAL BETWEEN '" + MV_PAR07 + "' AND '" + MV_PAR08 + "' AND "
+
+    else
+
+        cString := " E2_FILIAL LIKE '" + SubStr( cFilAnt, 1, 2 ) + "%' AND "
+
+    end if
+
     cString += " E2_FORNECE = '" + cFor450 + "' AND "
     cString += " E2_LOJA = '" + cLjFor + "' AND "
     cString += " E2_VENCREA >= '" + DTOS( dVenIni450 ) + "' AND "
