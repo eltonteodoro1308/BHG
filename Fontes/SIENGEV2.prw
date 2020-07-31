@@ -4,10 +4,14 @@
 - Cadastrar parâmetro SIE_ADTREF
 - Cadastrar parâmetro SIE_ADTNAT
 - Cadastrar parâmetro SIE_CONDPG
+- Cadastrar parâmetro SIE_URL -> https://api.sienge.com.br
+- Cadastrar parâmetro SIE_SUBDOM -> /bhg/public/api/v1/
+- Cadastrar parâmetro SIE_USER -> bhg-api
+- Cadastrar parâmetro SIE_PASWOR -> KkJ3THNPk2h8
 - Cadastrar indice Pedido de Compra NUMSIENGE
 - Cadastrar indice Produto CODSIENGE
-- Cadastrar indice Centro de Custo CODSIENGE -> CTT_FILIAL+CTT_XSIENG
-- Cadastrar indice Item Contábil CODSIENGE -> CTD_FILIAL+CTD_XSIENG
+- Cadastrar indice Centro de Custo CTTSIENGE -> CTT_FILIAL+CTT_XSIENG
+- Cadastrar indice Item Contábil CTDSIENGE -> CTD_FILIAL+CTD_XSIENG
 - Cadastrar Campo CTT_XSIENG
 - Cadastrar Campo CTD_XSIENG
 
@@ -37,9 +41,11 @@ user function SiengeV2( aParam )
     Local nY   := 0
     Local cMsg := ''
 
-    // Parâmetros utilizados por todos os End Points dos Web Service do SIENGE
-    Private cUrl       := 'https://api.sienge.com.br'
-    Private cPrefix    := '/bhg/public/api/v1/'
+    //TODO Tratar estes parâmetros para serem lidos sem estar com o ambinete no ar
+    //Parâmetros utilizados por todos os End Points dos Web Service do SIENGE
+    Private cUrl       := 'https://api.sienge.com.br'//AllTrim( GetMv( 'SIE_URL' ) )
+    Private cPrefix    := '/bhg/public/api/v1/'//AllTrim( GetMv( 'SIE_SUBDOM' ) )
+    //Private aHeader    := { 'Authorization: Basic ' + Encode64( AllTrim( GetMv( 'SIE_USER' ) ) + ':' + AllTrim( GetMv( 'SIE_PASWOR' ) ) ) }
     Private aHeader    := { 'Authorization: Basic ' + Encode64( 'bhg-api' + ':' + 'KkJ3THNPk2h8' ) }
     Private aCodFil    := {}
 
@@ -94,7 +100,7 @@ caso a empresa não tenha o cnpj preenchido será desconsiderada
 /*/
 static function GetEmpresas()
 
-    Local cPath      := cPrefix + 'companies'
+    Local cPath      := 'companies'
     Local aResult    := nil
     Local nX         := 0
     Local aBuildings := {}
@@ -208,7 +214,7 @@ Busca no SIENGE a lista de id´s de projetos de uma empresa
 /*/
 static function GetProjetos( nIdEmpresa )
 
-    Local cPath   := cPrefix + 'enterprises'
+    Local cPath   := 'enterprises'
     Local cQuery  := ''
     Local aRet    := {}
     Local aResult := {}
@@ -238,7 +244,7 @@ Busca lista de pedidos do Web service
 static function GetPedidos( nIdProjeto )
 
     Local aArea     := GetArea()
-    Local cPath      := cPrefix + 'purchase-orders'
+    Local cPath      := 'purchase-orders'
     Local aResult    := nil
     Local nX         := 0
     Local cQuery     := ''
@@ -427,7 +433,7 @@ popula as varáveis de código e loja do fornecedor
 /*/
 static function BuscaForn( cIdFornec, cCodForn, cCodLoja )
 
-    Local cPath     := cPrefix + 'creditors/' + cIdFornec
+    Local cPath     := 'creditors/' + cIdFornec
     Local cCnpj     := ''
     Local lRet      := .F.
     Local oJson     := fetch( cPath, , 'Fornecedores' )
@@ -477,7 +483,7 @@ static function BuscaCcIt( nIdCC, nIdItCtb, cCC, cItCtb )
     Local aArea := GetArea()
 
     DbSelectArea( 'CTT' )
-    CTT->( DBOrderNickname( 'CODSIENGE' ) ) // CTT_FILIAL+CTT_XSIENG
+    CTT->( DBOrderNickname( 'CTTSIENGE' ) ) // CTT_FILIAL+CTT_XSIENG
 
     if CTT->( DbSeek( xFilial() + cValToChaR( nIdCC ) ) )
 
@@ -490,7 +496,7 @@ static function BuscaCcIt( nIdCC, nIdItCtb, cCC, cItCtb )
     end if
 
     DbSelectArea( 'CTD' )
-    CTD->( DBOrderNickname( 'CODSIENGE' ) ) // CTD_FILIAL+CTD_XSIENG
+    CTD->( DBOrderNickname( 'CTDSIENGE' ) ) // CTD_FILIAL+CTD_XSIENG
 
     if CTD->( DbSeek( xFilial() + cValToChaR( nIdItCtb ) ) )
 
@@ -524,7 +530,7 @@ Busca no end point correspondente os itens do pedido de compra e popula o array 
 static function  GetItens( cIdPedido, cCC, cItCtb, aListaPC )
 
     Local lRet      := .T.
-    Local cPath     := cPrefix + '/purchase-orders/' + cIdPedido + '/items'
+    Local cPath     := '/purchase-orders/' + cIdPedido + '/items'
     Local aWsItens  := fetch( cPath, , 'Itens do Pedido de Compras' )
     Local nX        := 0
     Local cIdItem   := ''
@@ -606,7 +612,7 @@ Busca no Web Service do Sienge do adiantamentos
 /*/
 static function GetAdiant( nIdEmpresa )
 
-    Local cPath      := cPrefix + 'bills'
+    Local cPath      := 'bills'
     Local nDateRef   := GetMv( 'SIE_ADTREF' )
     Local cStartDate := DateFormat( Date() - nDateRef )
     Local cEndDate   := DateFormat( Date() )
@@ -783,7 +789,7 @@ static function fetch( cPath, cQuery, cConsulta )
 
         oFwRest := FWRest():New( cUrl )
 
-        oFwRest:SetPath( cPath )
+        oFwRest:SetPath( cPrefix + cPath )
 
         cGetParam += '?limit='
         cGetParam += cValToChar( nLimit )
