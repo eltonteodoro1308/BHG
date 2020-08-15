@@ -119,7 +119,17 @@
 			"args": [],
 			"label": "SIGAESP",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_FSBITMAP",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "SIGAFIN",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "U_SIENGEV2"
+	"lastProgramExecuted": "SIGAMDI"
 }
