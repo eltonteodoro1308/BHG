@@ -1,0 +1,59 @@
+CFGA650 - Log de Processamento
+CFGR650 - Relatório de Logs Mile
+
+? Disponibilizado no Financeiro o Log do Mile, retorno suporte não funcionou utilizando configuração de privilégios
+* Campo pre nota/doc entrada com descricao do produto não é carregado na seleção do pedido.
+* Campo item contabil banco email silas
+* Importação extrato, verificado o layout com o manual, ajustado o código do parâmetro bancário e cadastro de ocorrência
+? Verificar correção de títulos pelo ipca
+* verificar se há gatilho de conta contábil  e se vai para nota e pré nota 
+# Verificar pelo contas a pagar os pedidos vinculados a nota de origem e sua alçada correspondente.
+- Verificar programa que aumenta o número de dígitos de campo numérico
+- Verificar rotina de Retornar atualiza pacotes ?
+- Rotina para ajustar tamanho dos campos 
+- Verificar questão do dicionários, alterações que estão ocorrendo
+- Verificar contabilização iss na entrada
+- Verificar por que schedule está parando o slave
+* Verificar problemas com importação de txt do Silas
+* Verificar tamanho de decimais no campo de quantidade D1_QUANT
+- Verificar relatório de compensação entre carteiras FINR520 congela em registro do SE5 reclamando de lock sem ninguém acessando
+
+
+000752415
+
+Campos Criados :
+
+N3_XSALDO1
+C7_XINCPOR
+E1_XINCPOR
+E2_XINCPOR
+
+
+
+Parar base aplicar patch de correção e compilar fonte de compensação entre carteiras.
+
+N3_VRDMES1
+
+E5_XITEMCT
+
+
+
+
+Retorno Gizele:
+
+068 - Verificar Fluxo de Caixa com Silas
+075 - Verificar Fluxo de Caixa com Silas
+078 - Verificar Fluxo de Caixa com Silas
+099 - Rotina de compensação entre carteiras entre empresa disponibilizada ???
+
+
+085 - Campos de "Incluído por" nas tabelas SE1, SE2, SE5 e SC7
+101 - Campo bloqueado para edição e com valor fixo de "M1"
+102 - Disponibilizados os campos de Item contábil e Centros de Custos, obrigatórios de preenchimento
+111 - Tipo de Documento RAT cadastrado, em análise de teste com o Silas verificou-se que devido o tamanho
+      do campo de documento ser menor que o existente no txt o Protheus entendia com o mesmo registro,
+      foi disponibilizado no menu do financeiro as rotinas de consulta e relatório de log´s do MILE
+112 - Campos de quantidade no Pedido de Compras e Documento de Entrada com 4 dígitos decimais
+113 - Disponibilizados os campos de Item contábil e Centros de Custos, obrigatórios de preenchimento
+114 - Causas que provocavam o erro foram ajustados
+121 - Configurado que o Protheus não permita que ocorra lançamentos contábeis com diferença de débito e crédito
