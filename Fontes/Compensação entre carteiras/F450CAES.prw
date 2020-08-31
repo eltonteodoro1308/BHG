@@ -1,52 +1,47 @@
-#include "Protheus.ch"
+#include "totvs.ch"
 
-User Function F450CAES()
+/*/{Protheus.doc} F450CAES
+O ponto de entrada F450CAES é utilizado para validar ou executar algum procedimento após o usuário confirmar o Cancelamento/Estorno da compensação entre carteiras.
+O objetivo aqui é que o cancelamento seja feito apenas se foi selecionada a mesma Empresa/Filial selecionada no momento de executar a compensação.
+Será exibido um alerta indicando a Empresa/Filial que deve ser selecionada.
+@type user function 
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 28/08/2020
+@return numerico, retorna 1 para permitir o estorno/cancelamento e 0 para não permitir
+/*/
+user function F450CAES()
 
     Local cNumComp := PARAMIXB[1]
     Local nRetorno := PARAMIXB[2]
-    Local cCommand := ''
-    Local cTrab    := ''
-    Local aArea    := GetArea()
-    Local aAreaSE2 := SE2->( GetArea() )
+    Local cFil     := ''    
+    Local cTrb     := ''
 
     If nRetorno == 1
 
-//        cCommand += " UPDATE " + RetSqlName( 'SE2' ) + " SET "
-//        cCommand += " E2_BAIXA   = '', "
-//        cCommand += " E2_SALDO   = E2_VLCRUZ, "
-//        cCommand += " E2_VALLIQ  = 0, "
-//        cCommand += " E2_IDENTEE = '' "
-//        cCommand += " WHERE D_E_L_E_T_ = ' ' "
-//        cCommand += " AND E2_IDENTEE = '"  + cNumComp + "' "
-//    
-//        TCSqlExec( cCommand )
-//
-//        cTrab := MPSysOpenQuery( "SELECT R_E_C_N_O_ RECNO FROM " + RetSqlName( 'SE2' ) + " WHERE D_E_L_E_T_ = ' ' AND E2_IDENTEE = '"  + cNumComp + "' " )
-//
-//        (cTrab)->( DbGoTop() )
-//
-//        Do While ! (cTrab)->( Eof() )
-//
-//            SE2->( DbGoTo( (cTrab)->RECNO ) )
-//
-//            RecLock( 'SE2', .F. )
-//
-//            SE2->E2_BAIXA   := CtoD('')
-//            SE2->E2_SALDO   := SE2->E2_VLCRUZ
-//            SE2->E2_VALLIQ  := 0
-//            SE2->E2_IDENTEE := ''
-//
-//            SE2->( MsUnLock() )
-//
-//            (cTrab)->( DbSkip() )
-//
-//        End Do
-//
-//        (cTrab)->( DbCloseArea() )
+        cTrb := GetNextAlias()
+
+        BeginSql Alias cTrb
+
+            SELECT E5_FILIAL 
+            FROM %TABLE:SE5% 
+            WHERE %NOTDEL%
+            AND E5_IDENTEE = %EXP:cNumComp%
+
+        EndSql
+
+        cFil := ( cTrb )->E5_FILIAL
+
+        if cFilAnt <> cFil
+
+            Alert( 'Selecione a Empresa/Filail ' + cFil + ' para efetuar o estorno/cancelamento da compensação ' + cNumComp ) 
+
+            nRetorno := 0
+
+        end if
+
+        ( cTrb )->( DbCloseArea() )
 
     EndIf
-
-    //SE2->( RestArea( aAreaSE2 ) )
-    //RestArea( aArea )
 
 Return nRetorno

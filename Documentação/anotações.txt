@@ -28,8 +28,6 @@ C7_XINCPOR
 E1_XINCPOR
 E2_XINCPOR
 
-
-
 Parar base aplicar patch de correção e compilar fonte de compensação entre carteiras.
 
 N3_VRDMES1
@@ -46,6 +44,11 @@ Retorno Gizele:
 078 - Verificar Fluxo de Caixa com Silas
 099 - Rotina de compensação entre carteiras entre empresa disponibilizada ???
 
+*** 028 - Conhecimento pre nota e doc de entrada
+*** 080 - Verificar questão classificação de ativos
+*** 130 - Verificar na exclusão de ativo reclama de MV_PRELAN
+*** 128 - 
+*** 131 - Baixa com descontos e juros não tem Centro de Custo e Item Contábil
 
 085 - Campos de "Incluído por" nas tabelas SE1, SE2, SE5 e SC7
 101 - Campo bloqueado para edição e com valor fixo de "M1"
@@ -57,3 +60,14 @@ Retorno Gizele:
 113 - Disponibilizados os campos de Item contábil e Centros de Custos, obrigatórios de preenchimento
 114 - Causas que provocavam o erro foram ajustados
 121 - Configurado que o Protheus não permita que ocorra lançamentos contábeis com diferença de débito e crédito
+
+
+
+MV_SUBLOTE: Indica se será utilizado o Sub-Lote no Lançamento Contábil. Se o conteúdo do parâmetro estiver preenchido,
+            o Sistema assumirá sempre essa numeração.
+
+MV_CTBAPLA: Indica se o SigaCTB ira limpar os flags de contabilização (_LA/_DTLANC) ao excluir lançamentos.
+1=Nao;2=Perguntar;3=Sim c/alertas;4=Sim s/ alertas
+
+MV_CTBFLAG: Indica se a marcação dos flags de contabilização das rotinas Off-Line será feita na transação do lançamento contábil - SIGACTB.
+

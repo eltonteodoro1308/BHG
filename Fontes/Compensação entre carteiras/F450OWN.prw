@@ -1,6 +1,6 @@
 #Include 'Totvs.ch'
 /*/{Protheus.doc} F450OWN
-Ponto de Entrada utilizado na montagem da expressão que compõe o filtro da tabela SE1
+Ponto de Entrada utilizado na montagem da expressão que compõe o filtro da tabela SE1 com o objetivo de exibir títulos de empresas diferentes.
 @type user function
 @version 12.1.27
 @author elton.alves@totvs.com.br
