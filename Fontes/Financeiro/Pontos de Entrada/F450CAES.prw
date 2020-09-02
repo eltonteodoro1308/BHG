@@ -14,8 +14,9 @@ user function F450CAES()
 
     Local cNumComp := PARAMIXB[1]
     Local nRetorno := PARAMIXB[2]
-    Local cFil     := ''    
+    Local cFil     := ''
     Local cTrb     := ''
+    Local cMsg     := ''
 
     If nRetorno == 1
 
@@ -34,7 +35,13 @@ user function F450CAES()
 
         if cFilAnt <> cFil
 
-            Alert( 'Selecione a Empresa/Filail ' + cFil + ' para efetuar o estorno/cancelamento da compensação ' + cNumComp ) 
+            cMsg += 'A compensação número <u><b>( '
+            cMsg += cNumComp
+            cMsg += ' )</b></u> deve ser Estornada/Cancelada com a Empresa/Filial <u><b>( '
+            cMsg += cFil
+            cMsg += ' )</b></u> selecionada.'
+            
+            ApMsgStop ( cMsg, 'Atenção' ) 
 
             nRetorno := 0
 

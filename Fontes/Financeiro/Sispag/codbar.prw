@@ -1,27 +1,22 @@
+#include "rwmake.ch"
+                     
 /*
 ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ±±ÉÍÍÍÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍËÍÍÍÍÍÍÑÍÍÍÍÍÍÍÍÍÍÍÍÍ»±±
-±±ºPrograma  ³CODBAR   ºAutor  ³TOTVS               º Data ³  31/03/06   º±±
+±±ºPrograma  ³CODBAR    ºAutor  ³Osmil Squarcine     º Data ³  12/06/05   º±±
 ±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÊÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
 ±±ºDesc.     ³ PROGRAMA PARA TRATAMENTO DO CAMPO E2_CODBAR PARA UTILIZACAOº±±
 ±±º          ³ DO PAGFOR                                                  º±±
 ±±ÌÍÍÍÍÍÍÍÍÍÍØÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹±±
-±±ºUso       ³                                                            º±±
+±±ºUso       ³ AP8 - HOSPITAL SANTA CRUZ    x                             º±±
 ±±ÈÍÍÍÍÍÍÍÍÍÍÏÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¼±±
-±± Alteracao:                                                             ±±±
-±±                                                                        ±±±
-±±                                                                        ±±±
-±±                                                                        ±±±
-±±                                                                        ±±±
+±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
 
 ///--------------------------------------------------------------------------\
-//| Função: CODBAR				Autor: Flávio Novaes		Data: 19/10/2003 |
-//|--------------------------------------------------------------------------|
-//| Essa Função foi desenvolvida com base no Manual do Bco. Itaú e no RDMAKE:|
-//| CODBARVL - Autor: Vicente Sementilli - Data: 26/02/1997.                 |
+//| Função: CODBAR				Autor: Alexandre Lelis      Data: 18/10/2017 |
 //|--------------------------------------------------------------------------|
 //| Descrição: Função para Validação de Código de Barras (CB) e Representação|
 //|            Numérica do Código de Barras - Linha Digitável (LD).	         |
@@ -50,17 +45,14 @@
 //|            Utilize também o gatilho com a Função CONVLD() para converter |
 //|            a LD em CB.													 |
 //\--------------------------------------------------------------------------/
-USER FUNCTION CODBAR()       
 
-local lret := VldCodBar(M->E2_CODBAR)
-            
-RETURN(lRet)
+USER FUNCTION CodBar()       
 
-/*
-USER FUNCTION CODBAR()       
+Local nMod:=0
+Local lRet:=0
+Local i
 
-SETPRVT("cStr,lRet,cTipo,nConta,nMult,nVal,nDV,cCampo,i,nMod,nDVCalc,lFgts,cFgts")
-
+SETPRVT("cStr,lRet,cTipo,nConta,nMult,nVal,nDV,cCampo,i,nMod,nDVCalc")
 
 // Retorna .T. se o Campo estiver em Branco.
 IF VALTYPE(M->E2_CODBAR) == NIL .OR. EMPTY(M->E2_CODBAR)
@@ -74,28 +66,15 @@ lRet := IF(LEN(cStr)==45 .OR. LEN(cStr)==46,.F.,.T.)
 
 // Se o Tamanho do String for menor que 44, completa com zeros até 47 dígitos. Isso é
 // necessário para Bloquetos que NÂO têm o vencimento e/ou o valor informados na LD.
-// Completa as 14 posicoes do valor do documento.
-cStr := IF(LEN(cStr)<44,subs(cStr,1,33)+Strzero(val(Subs(cStr,34,14)),14),cStr)                            
+cStr := IF(LEN(cStr)<44,cStr+REPL("0",47-LEN(cStr)),cStr)
 
 // Verifica se a LD é de (B)loquetos ou (C)oncessionárias/IPTU. Se for CB retorna (I)ndefinido.
 cTipo := IF(LEN(cStr)==47,"B",IF(LEN(cStr)==48,"C","I"))
-                              
-lFgts := .F.
-If cTipo == "C"
-   
-   cFgts := Substr(cStr,17,4)  //--- Posicao 17 - 4 caracteres igual a 0179 ou 0180 ou 0181 significa FGTS
-   If cFgts == "0179" .or. cFgts == "0180" .or. cFgts == "0181"                 
-      lFgts := .T.
-   EndIf
-EndIf
+
 // Verifica se todos os dígitos são numérios.
 FOR i := LEN(cStr) TO 1 STEP -1
 	lRet := IF(SUBSTR(cStr,i,1) $ "0123456789",lRet,.F.)
 NEXT
-
-If !lRet
-   MsgAlert('Somente números devem ser informados no código de barras.')
-EndIf
 
 IF LEN(cStr) == 47 .AND. lRet
 	// Consiste os três DV´s de Bloquetos pelo Módulo 10.
@@ -115,8 +94,8 @@ IF LEN(cStr) == 47 .AND. lRet
 		nDVCalc := IF(nDVCalc==10,0,nDVCalc)
 		lRet    := IF(lRet,(nDVCalc==nDV),.F.)
 		nConta  := nConta + 1
-	ENDDO                                                              
-   	// Se os DV´s foram consistidos com sucesso (lRet=.T.), converte o número para CB para consistir o DVG.
+	ENDDO
+	// Se os DV´s foram consistidos com sucesso (lRet=.T.), converte o número para CB para consistir o DVG.
 	cStr := IF(lRet,SUBSTR(cStr,1,4)+SUBSTR(cStr,33,15)+SUBSTR(cStr,5,5)+SUBSTR(cStr,11,10)+SUBSTR(cStr,22,10),cStr)
 ENDIF
 
@@ -124,29 +103,6 @@ IF LEN(cStr) == 48 .AND. lRet
 	// Consiste os quatro DV´s de Títulos de Concessionárias de Serviço Público e IPTU pelo Módulo 10.
 	nConta  := 1
 	WHILE nConta <= 4
-                  
-      If lFgts //--- Valida pelo Modulo 11  para FGTS
-         
-	     // Consiste o DV do FGTS pelo Módulo 11.
-		 nDV    := VAL(SUBSTR(cStr,IF(nConta==1,12,IF(nConta==2,24,IF(nConta==3,36,48))),1))
-		 cCampo := SUBSTR(cStr,IF(nConta==1,1,IF(nConta==2,13,IF(nConta==3,25,37))),11)
-		 nMult  := 2
-		 nVal   := 0
-		 FOR i := 11 TO 1 STEP -1
-		  	nMod  := VAL(SUBSTR(cCampo,i,1)) * nMult
-		   	nVal  := nVal + nMod
-			nMult := IF(nMult==9,2,nMult+1)
-		 NEXT
-		 nDVCalc := 11-MOD(nVal,11)
-		 // Se o DV Calculado for 0,10 ou 11 é assumido 1 (Um).
-         //--- pelo modulo 11 é assumido 1, o FGTS está calculando 0, pendente GIOVANA
-         
-		 //nDVCalc := IF(nDVCalc==0 .OR. nDVCalc==10 .OR. nDVCalc==11,1,nDVCalc)
-		 nDVCalc := IF(nDVCalc==0 .OR. nDVCalc==10 .OR. nDVCalc==11,0,nDVCalc)
-	
-        
-      Else
-       
 		nMult  := 2
 		nVal   := 0
 		nDV    := VAL(SUBSTR(cStr,IF(nConta==1,12,IF(nConta==2,24,IF(nConta==3,36,48))),1))
@@ -159,16 +115,10 @@ IF LEN(cStr) == 48 .AND. lRet
 		nDVCalc := 10-MOD(nVal,10)
 		// Se o DV Calculado for 10 é assumido 0 (Zero).
 		nDVCalc := IF(nDVCalc==10,0,nDVCalc)
-	 
-	  EndIf
-
-	  lRet    := IF(lRet,(nDVCalc==nDV),.F.)
-
-	  nConta  := nConta + 1          
-   	
-       		
+		lRet    := IF(lRet,(nDVCalc==nDV),.F.)
+		nConta  := nConta + 1
 	ENDDO
-   	// Se os DV´s foram consistidos com sucesso (lRet=.T.), converte o número para CB para consistir o DVG.
+	// Se os DV´s foram consistidos com sucesso (lRet=.T.), converte o número para CB para consistir o DVG.
 	cStr := IF(lRet,SUBSTR(cStr,1,11)+SUBSTR(cStr,13,11)+SUBSTR(cStr,25,11)+SUBSTR(cStr,37,11),cStr)
 ENDIF
 
@@ -211,12 +161,7 @@ IF LEN(cStr) == 44 .AND. lRet
 ENDIF
 
 IF !lRet
-   MsgAlert('O código de barras está inválido. Informe novamente.')
-
+	HELP(" ",1,"ONLYNUM")
 ENDIF
 
 RETURN(lRet)
-*/
-
-
-
