@@ -15,7 +15,7 @@ aParam[ 2 ] => Filial associada ao agendamento da rotina
 aParam[ 3 ] => Usuário associado ao agendamento
 aParam[ 4 ] => Id do agendamento
 /*/
-user function Sienge( aParam )
+user function Siengev1( aParam )
 
     Default aParam := { '01', '010001' }
 
