@@ -62,13 +62,22 @@ static function ProcData( dDe, dAte )
 
     if dDe > dAte
 
-        ApMsgStop( 'A data de Início deve ser menor ou igual do que a data Final.' )
+        ApMsgStop( 'A data de Início deve ser menor ou igual do que a data Final.', 'SIENGE' )
 
     else
-//TODO definir mensagem se não conseguit acesso ao end point do sienge
+//TODO definir mensagem se não conseguir acesso ao end point do sienge
     end if
 
 return
+
+/*TODO
+- Buscar cabeçalho(s) de Pedido(s)
+- Busca dados do Fornecedor
+- Buscar Itens de cada Pedido
+- Buscar Dados dos Produtos
+
+
+*/
 
 /*/{Protheus.doc} ProcId
 Requisita um pedido de compras pelo ID
@@ -82,7 +91,7 @@ static function ProcId( cID )
 
     if Empty( cId )
 
-        ApMsgStop( 'Informe um Id de Pedido de Compra Válido.' )
+        ApMsgStop( 'Informe um Id de Pedido de Compra Válido.', 'SIENGE' )
 
     else
 

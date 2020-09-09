@@ -134,7 +134,12 @@
 			"args": [],
 			"label": "U_F450CAES",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "SIGAADV",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "SIGAFIN"
+	"lastProgramExecuted": "SIGAADV"
 }
