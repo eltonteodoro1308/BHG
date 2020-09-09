@@ -14,6 +14,8 @@ user function F050MCP()
 
     local aRet := {}
 
+    aAdd( aRet, 'E2_VENCTO'  )
+    aAdd( aRet, 'E2_VENCREA' )
     aAdd( aRet, 'E2_ITEMCTA' )
     aAdd( aRet, 'E2_CCUSTO'  )
 
