@@ -18,5 +18,6 @@ user function F050MCP()
     aAdd( aRet, 'E2_VENCREA' )
     aAdd( aRet, 'E2_ITEMCTA' )
     aAdd( aRet, 'E2_CCUSTO'  )
+    aAdd( aRet, 'E2_LINDIG'  )
 
 return aRet
