@@ -132,7 +132,7 @@ static function RunData( dDe, dAte )
 
     Local cRet      := ""
     Local aRet      := {}
-    Local cGetParam := ""
+    Local cPath := ""
     Local nLimit    := 200
     Local nOffSet   := 0
     Local nCount    := 0
@@ -142,24 +142,25 @@ static function RunData( dDe, dAte )
 
     Do While .T.
 
+        cPath += '/purchase-orders/'
+        cPath += '?limit='
+        cPath += cValToChar( nLimit )
+        cPath += '&offset='
+        cPath += cValToChar( nLimit * nOffSet )
+        cPath += '&startDate='
+        cPath += DateFormat( dDe )
+        cPath += '&endDate='
+        cPath += DateFormat( dAte )
+        cPath += '&buildingId='
+        cPath += cSIEEMPRES
+        cPath += '&status=PENDING'
+        cPath += '&authorized=true'
+
         oFwRest := FWRest():New( cSIEURL )
 
-        oFwRest:SetPath( 'purchase-orders' )
+        oFwRest:SetPath( cPath )
 
-        cGetParam += '?limit='
-        cGetParam += cValToChar( nLimit )
-        cGetParam += '&offset='
-        cGetParam += cValToChar( nLimit * nOffSet )
-        cGetParam += '&startDate='
-        cGetParam += DateFormat( dDe )
-        cGetParam += '&endDate='
-        cGetParam += DateFormat( dAte )
-        cGetParam += '&buildingId='
-        cGetParam += cSIEEMPRES
-        cGetParam += '&status=PENDING'
-        cGetParam += '&authorized=true'
-
-        if oFwRest:Get( aHeader, cGetParam )
+        if oFwRest:Get( aHeader )
 
             oJson := JsonObject():New()
 
@@ -196,11 +197,13 @@ static function RunData( dDe, dAte )
         end if
 
         nOffSet++
-        cGetParam := ''
+        cPath := ''
         FreeObj( oJson   )
         FreeObj( oFwRest )
 
-        if ( nCount >= ( nLimit * ( nOffSet - 1 ) ) ) .And. ( nCount <= ( nLimit * nOffSet ) )
+        //if nCount >= ( ( nLimit * nOffSet ) + 1 ) .And. nCount <= ( nLimit * ( nOffSet  + 1 ) )
+
+        if nCount < ( nLimit * nOffSet ) + 1
 
             Exit
 
@@ -250,36 +253,39 @@ Processa a requisição de um pedido de compras pelo ID
 /*/
 static function RunId( cID )
 
-    Local cRet      := ""
-    Local aRet      := {}
-    Local oFwRest   := nil
-    Local oJson     := nil
+    Local cRet    := ""
+    Local aRet    := {}
+    Local lOk     := .F.
+    Local oFwRest := nil
+    Local oJson   := nil
 
     oFwRest := FWRest():New( cSIEURL )
 
     oFwRest:SetPath( 'purchase-orders/' + AllTrim( cID ) )
 
-    if oFwRest:Get( aHeader )
+    lOk := oFwRest:Get( aHeader )
 
-        oJson := JsonObject():New()
+    oJson := JsonObject():New()
 
-        cRet := oJson:FromJSON( oFwRest:GetResult() )
+    cRet := oJson:FromJSON( oFwRest:GetResult() )
 
-        if Empty( cRet )
+    if ! Empty( cRet )
+
+        ApMsgStop(  'Não Foi possível montar o JSON da requisição:' + CRLF + cRet )
+
+        return aRet
+
+    end if
+
+    if lOk
 
         aRet := { oJson }
 
-        else
+    elseif oJson['developerMessage'] == "purchase.order.not_found"
 
-            ApMsgStop(  'Não Foi possível montar o JSON da requisição:' + CRLF + cRet )
-
-        end if
+        ApMsgStop(  'Pedido de Compras "' + AllTrim( cID ) + '" não localizado', 'SIENGE' )
 
     else
-
-        //TODO Tratar retorno indicando que pedido não foi localizado.
-        // a seguir modelo de json retornado quando não locaiza o pedido de compra
-        //{"status":400,"developerMessage":"purchase.order.not_found","clientMessage":"purchase.order.not_found"}
 
         ApMsgStop(  'Não Foi possível fazer esta requisição:' + CRLF + oFwRest:GetLastError(), 'SIENGE' )
 
@@ -297,6 +303,8 @@ return aRet
 @return return_type, return_description
 /*/
 static function ProcPedCmp( aCabPedCmp )
+
+//TODO  oJson['status'] == 'PENDING' .And. oJson['authorized'] verificar se pedido chega com essa condição
 
 return
 
