@@ -16,6 +16,7 @@ SIE_PASWOR
 SIE_EMPRES (Deve ser definido para cada filial)
 SIE_ATVPRJ (Deve ser definido para cada filial)
 SIE_CCUSTO
+A documentação da API de integração com SIENGE se encontra no link https://api.sienge.com.br/docs/
 /*/
 User Function Sienge()
 
@@ -34,8 +35,8 @@ User Function Sienge()
     Local oSayDtAte  := nil
     Local oSayDtDe   := nil
     Local oSayId     := nil
-
-    Private oDlgMain := nil
+    Local oDlgMain   := nil
+    //Local cAviso     := ''
 
     Private cSIECONDPG := AllTrim( GetMv( 'SIE_CONDPG' ) )
     Private cSIEURL    := AllTrim( GetMv( 'SIE_URL'    ) )
@@ -47,7 +48,12 @@ User Function Sienge()
     Private cCodNomFil := SM0->( AllTrim( M0_CODFIL ) + ' - ' + AllTrim( M0_FILIAL ) )
     Private aHeader    :=  { 'Authorization: Basic ' + Encode64( cSIEUSER + ':' + cSIEPASWOR ) }
 
-    if Empty( cSIEURL );
+    // Se o Centro de Custo a ser aplicado aos Pedidos de Compras é válido e não está bloqueado
+    // Se o Item Contábil a ser aplicado aos Pedidos de Compras é válido e não está bloqueado
+    // Se condição de pagamento existe no cadastro e se não está bloqueada
+
+    if Empty( cSIECONDPG );
+            .Or. Empty( cSIEURL );
             .Or. Empty( cSIEUSER );
             .Or. Empty( cSIEPASWOR );
             .Or. Empty( cSIEEMPRES );
@@ -103,15 +109,19 @@ static function ProcData( dDe, dAte )
 
     if dDe > dAte
 
-        ApMsgStop( 'A data de Início deve ser menor ou igual do que a data Final.', 'SIENGE' )
+        ApMsgAlert( 'A data de Início deve ser menor ou igual do que a data Final.', 'SIENGE' )
 
     else
 
-        MsgRun ( 'Aguarde alguns instantes...', 'Buscando Pedidos no Web Service do SIENGE...', {|| aCabPedCmp := RunData( dDe, dAte ) } )
+        MsgRun ( 'Buscando Pedidos no Web Service do SIENGE...', 'Aguarde alguns instantes...', {|| aCabPedCmp := RunData( dDe, dAte ) } )
 
     end if
 
-    if ! Empty( aCabPedCmp )
+    if Empty( aCabPedCmp )
+
+        ApMsgAlert( 'Não houve retorno pedido na busca solicitada.', 'SIENGE' )
+
+    else
 
         ProcPedCmp( aCabPedCmp )
 
@@ -132,7 +142,7 @@ static function RunData( dDe, dAte )
 
     Local cRet      := ""
     Local aRet      := {}
-    Local cPath := ""
+    Local cPath     := ""
     Local nLimit    := 200
     Local nOffSet   := 0
     Local nCount    := 0
@@ -227,11 +237,11 @@ static function ProcId( cID )
 
     if Empty( cId )
 
-        ApMsgStop( 'Informe um Id de Pedido de Compra Válido.', 'SIENGE' )
+        ApMsgAlert( 'Informe um Id de Pedido de Compra Válido.', 'SIENGE' )
 
     else
 
-        MsgRun ( 'Aguarde alguns instantes...', 'Buscando Pedidos no Web Service do SIENGE...', {|| aCabPedCmp := RunId( cID ) } )
+        MsgRun ( 'Buscando Pedidos no Web Service do SIENGE...', 'Aguarde alguns instantes...', {|| aCabPedCmp := RunId( cID ) } )
 
     end if
 
@@ -279,11 +289,23 @@ static function RunId( cID )
 
     if lOk
 
-        aRet := { oJson }
+        if oJson['status'] != 'PENDING'
+
+            ApMsgAlert(  'Pedido de Compras "' + AllTrim( cID ) + '" não está com a situação "PENDENTE"', 'SIENGE' )
+
+        elseif ! oJson['authorized']
+
+            ApMsgAlert(  'Pedido de Compras "' + AllTrim( cID ) + '" não está Autorizado', 'SIENGE' )
+
+        else
+
+            aRet := { oJson }
+
+        end if
 
     elseif oJson['developerMessage'] == "purchase.order.not_found"
 
-        ApMsgStop(  'Pedido de Compras "' + AllTrim( cID ) + '" não localizado', 'SIENGE' )
+        ApMsgAlert( 'Pedido de Compras "' + AllTrim( cID ) + '" não localizado', 'SIENGE' )
 
     else
 
@@ -294,17 +316,258 @@ static function RunId( cID )
 return aRet
 
 /*/{Protheus.doc} ProcPedCmp
-
+Processa a lista de pedidos de compras recebida buscando seus itens correspondentes e fazendo as validações do Pedido de Compras
 @type user function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 09/09/2020
-@param cJson, character, param_description
-@return return_type, return_description
+@param aCabPedCmp, array, array com a lista de cabeçalhos de pedidos de compras
 /*/
 static function ProcPedCmp( aCabPedCmp )
 
-//TODO  oJson['status'] == 'PENDING' .And. oJson['authorized'] verificar se pedido chega com essa condição
+    Local nX       := 0
+    Local cId      := ''
+
+    for nX := 1 to Len( aCabPedCmp )
+
+        cId := cValToChar( aCabPedCmp[ nX ]['id'] )
+
+        MsgRun( 'Buscando itens do Pedido ' + cId + '...', 'Aguarde alguns instantes...', {|| GetItens( aCabPedCmp[ nX ] ) } )
+
+        MsgRun( 'Buscando CNPJ do Fornecedor do Pedido ' + cId + '...', 'Aguarde alguns instantes...', {|| GetFornec( aCabPedCmp[ nX ] ) } )
+
+        MsgRun( 'Validando dados do Pedido ' + cId + '...', 'Aguarde alguns instantes...', {|| VldPedCmp( aCabPedCmp[ nX ] ) } )
+
+    next nX
+
+    //TODO ShowPedCmp( aCabPedCmp )
+
+return
+
+/*/{Protheus.doc} GetItens
+Busca no SIENGE os itens dos Pedido de Compra
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 14/09/2020
+@param oJsonCabec, object, Objeto json com o cabeçalho do pedido de compras que será populado com seus itens correspondentes.
+/*/
+static function GetItens( oJsonCabec )
+
+    Local cRet      := ""
+    Local cPath     := ""
+    Local nLimit    := 200
+    Local nOffSet   := 0
+    Local nCount    := 0
+    Local oFwRest   := nil
+    Local oJson     := nil
+    Local nX        := 0
+
+    oJsonCabec['itens'] := {}
+
+    Do While .T.
+
+        cPath += '/purchase-orders/'
+        cPath += cValToChar( oJsonCabec['id'] )
+        cPath += '/items/?limit='
+        cPath += cValToChar( nLimit )
+        cPath += '&offset='
+        cPath += cValToChar( nLimit * nOffSet )
+
+        oFwRest := FWRest():New( cSIEURL )
+
+        oFwRest:SetPath( cPath )
+
+        oFwRest:Get( aHeader )
+
+        oJson := JsonObject():New()
+
+        cRet := oJson:FromJSON( oFwRest:GetResult() )
+
+        nCount := oJson["resultSetMetadata"]["count"]
+
+        for nX := 1 to len( oJson['results'] )
+
+            aAdd( oJsonCabec['itens'], oJson['results'][nX] )
+
+        next nx
+
+        nOffSet++
+        cPath := ''
+        FreeObj( oJson   )
+        FreeObj( oFwRest )
+
+        if nCount < ( nLimit * nOffSet ) + 1
+
+            Exit
+
+        End If
+
+    End Do
+
+return
+
+/*/{Protheus.doc} GetItens
+Busca no SIENGE o CNPJ do fornecedor do Pedido de Compra
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 14/09/2020
+@param oJsonCabec, object, Objeto json com o cabeçalho do pedido de compras que será populado o CNPJ do fornecedor.
+/*/
+static function GetFornec( oJsonCabec )
+
+    Local cRet    := ""
+    Local lOk     := .F.
+    Local oFwRest := nil
+    Local oJson   := nil
+    Local cCnpj   := ''
+
+    oFwRest := FWRest():New( cSIEURL )
+
+    oFwRest:SetPath( '/creditors/' + cValtoChar( oJsonCabec['supplierId'] ) )
+
+    lOk := oFwRest:Get( aHeader )
+
+    oJson := JsonObject():New()
+
+    cRet := oJson:FromJSON( oFwRest:GetResult() )
+
+    cCnpj := oJson['cnpj']
+    cCnpj := StrTran( cCnpj , '.', '' )
+    cCnpj := StrTran( cCnpj , '/', '' )
+    cCnpj := StrTran( cCnpj , '-', '' )
+
+    oJsonCabec['A2_CGC'] := cCnpj
+
+return
+
+
+static function VldPedCmp( oJsonCabec )
+
+    oJsonCabec['situacao'] := 'apto'
+    oJsonCabec['criticas'] := aClone( {} )
+
+    // Se o ID do Pedido de Compras já existe na base do Protheus
+    JaImportado( oJsonCabec )
+
+    // Se o ID ou o CNPJ do Fornecedor já existe na base do Protheus e não se encontra bloqueado
+    FornecOk( oJsonCabec )
+
+    // Se o ID do Produto já existe na base do Protheus e não se encontra Bloqueado
+    // Se há uma conta contábil vinculada ao Produto, se a mesma é válida e não está bloqueada
+    ItensOk( oJsonCabec )
+
+return
+
+
+static function JaImportado( oJsonCabec )
+
+    Local aArea    := GetArea()
+    Local aAreaSC7 := SC7->( GetArea() )
+
+    SC7->( DBOrderNickname( 'SC7SIENGE' ) )
+    If SC7->( DBSeek( cValTochar( oJsonCabec['id'] ) ) )
+
+        oJsonCabec['situacao'] := 'importado'
+
+    end if
+
+    RestArea( aAreaSC7 )
+    RestArea( aArea )
+
+return
+
+
+static function FornecOk( oJsonCabec )
+
+    Local aArea    := GetArea()
+    Local aAreaSA2 := SA2->( GetArea() )
+
+    SA2->( DBOrderNickname( 'SA2SIENGE' ) )
+    If SA2->( DBSeek( cValTochar( oJsonCabec['supplierId'] ) ) )
+
+        oJsonCabec['A2_COD']  := SA2->A2_COD
+        oJsonCabec['A2_LOJA'] := SA2->A2_LOJA
+
+        if SA2->A2_MSBLQL == '1'
+
+            oJsonCabec['situacao'] := 'inapto'
+
+            aAdd( oJsonCabec['criticas'], 'Fornecedor Bloqueado.' )
+
+        end if
+
+    else
+
+        SA2->( DBSetOrder( 3 ) )
+        If SA2->( DBSeek( oJsonCabec['A2_CGC'] ) )
+
+            oJsonCabec['A2_COD']  := SA2->A2_COD
+            oJsonCabec['A2_LOJA'] := SA2->A2_LOJA
+
+            if SA2->A2_MSBLQL == '1'
+
+                oJsonCabec['situacao'] := 'inapto'
+
+                aAdd( oJsonCabec['criticas'], 'Fornecedor Bloqueado.' )
+
+            end if
+
+        else
+
+            oJsonCabec['situacao'] := 'inapto'
+            oJsonCabec['A2_COD']   := ''
+            oJsonCabec['A2_LOJA']  := ''
+            aAdd( oJsonCabec['criticas'], 'Fornecedor não localizado na base.' )
+
+        end if
+
+    end if
+
+    RestArea( aAreaSA2 )
+    RestArea( aArea )
+
+return
+
+static function ItensOk( oJsonCabec )
+
+    Local nX       := 0
+    Local aArea    := GetArea()
+    Local aAreaSB1 := SB1->( GetArea() )
+
+    DbSelectArea( 'SB1' )
+    SB1->( DBOrderNickname( 'SB1SIENGE' ) )
+
+    for nX := 1 to len( oJsonCabec['itens'] )
+
+        if SB1->( DbSeek( cValToChar( oJsonCabec['itens'][nX]['resourceId'] ) ) )
+
+            oJsonCabec['itens'][nX]['B1_COD']   := SB1->B1_COD
+            //TODO Conta Contábil Produto.
+
+            if SB1->B1_MSBLQL == '1'
+
+                oJsonCabec['itens'][nX]['situacao'] := 'Produto bloqueado.'
+
+            else
+
+                oJsonCabec['itens'][nX]['situacao'] := 'OK'
+
+            end if
+
+        else
+
+            oJsonCabec['situacao'] := 'inapto'
+            oJsonCabec['itens'][nX]['B1_COD']   := ''
+            oJsonCabec['itens'][nX]['situacao'] := 'Não Localizado no Cadastro'
+
+        end if
+
+    next nX
+
+    RestArea( aAreaSB1 )
+    RestArea( aArea )
 
 return
 
