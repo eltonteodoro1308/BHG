@@ -154,7 +154,7 @@ static Function GetEmpNome( cId )
 
     oJson := JsonObject():New()
 
-    cRet := oJson:FromJSON(DecodeUtf8( oFwRest:GetResult() ) )
+    cRet := oJson:FromJSON( oFwRest:GetResult() )
 
     cRet := oJson['name']
 
@@ -233,7 +233,7 @@ static function RunData( dDe, dAte )
         cPath += DateFormat( dAte )
         cPath += '&buildingId='
         cPath += cSIEEMPRES
-        cPath += '&status=PENDING'
+        //cPath += '&status=PENDING'
         cPath += '&authorized=true'
 
         oFwRest := FWRest():New( cSIEURL )
@@ -244,7 +244,7 @@ static function RunData( dDe, dAte )
 
             oJson := JsonObject():New()
 
-            cRet := oJson:FromJSON(DecodeUtf8(   oFwRest:GetResult() ) )
+            cRet := oJson:FromJSON( oFwRest:GetResult() )
 
             if Empty( cRet )
 
@@ -252,7 +252,11 @@ static function RunData( dDe, dAte )
 
                 for nX := 1 to len( oJson['results'] )
 
-                    aAdd( aRet, oJson['results'][nX] )
+                    if oJson['results'][nX]['status'] != 'CANCELED'
+
+                        aAdd( aRet, oJson['results'][nX] )
+
+                    end if
 
                 next nx
 
@@ -347,7 +351,7 @@ static function RunId( cID )
 
     oJson := JsonObject():New()
 
-    cRet := oJson:FromJSON(DecodeUtf8(  oFwRest:GetResult() ) )
+    cRet := oJson:FromJSON( oFwRest:GetResult() )
 
     if ! Empty( cRet )
 
@@ -359,9 +363,13 @@ static function RunId( cID )
 
     if lOk
 
-        if oJson['status'] != 'PENDING'
+        if oJson['status'] == 'CANCELED'
 
-            ApMsgAlert(  'Pedido de Compras "' + AllTrim( cID ) + '" não está com a situação "PENDENTE"', 'SIENGE' )
+            ApMsgAlert(  'Pedido de Compras "' + AllTrim( cID ) + '" está com a situação "CANCELADO"', 'SIENGE' )
+
+        elseif cValtoChar( oJson["buildingId"] ) != cSIEEMPRES
+
+            ApMsgAlert(  'Pedido de Compras "' + AllTrim( cID ) + '" não pertence a esta Empresa/Filial', 'SIENGE' )
 
         elseif ! oJson['authorized']
 
@@ -387,6 +395,7 @@ return aRet
 
 /*/{Protheus.doc} ProcPedCmp
 Processa a lista de pedidos de compras recebida buscando seus itens correspondentes e fazendo as validações do Pedido de Compras
+e exibe a tela com a lista dos pedidos retornados
 @type user function
 @version 12.1.27
 @author elton.alves@totvs.com.br
@@ -401,6 +410,14 @@ static function ProcPedCmp( aCabPedCmp )
 
 return
 
+/*/{Protheus.doc} RunPedCmp
+Processa a lista de pedidos de compras recebida buscando seus itens correspondentes e fazendo as validações do Pedido de Compras
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 09/09/2020
+@param aCabPedCmp, array, array com a lista de cabeçalhos de pedidos de compras
+/*/
 static function RunPedCmp( aCabPedCmp )
 
     Local nX       := 0
@@ -410,10 +427,6 @@ static function RunPedCmp( aCabPedCmp )
     for nX := 1 to Len( aCabPedCmp )
 
         cId := cValToChar( aCabPedCmp[ nX ]['id'] )
-
-        //MsgRun( 'Buscando itens do Pedido ' + cId + '...', 'Aguarde alguns instantes...', {|| GetItens( aCabPedCmp[ nX ] ) } )
-        //MsgRun( 'Buscando CNPJ do Fornecedor do Pedido ' + cId + '...', 'Aguarde alguns instantes...', {|| GetFornec( aCabPedCmp[ nX ] ) } )
-        //MsgRun( 'Validando dados do Pedido ' + cId + '...', 'Aguarde alguns instantes...', {|| VldPedCmp( aCabPedCmp[ nX ] ) } )
 
         MsProcTxt(  'Processando Pedidos retornados ' + cValToChar( nX ) + ' de ' + cTotPed )
         ProcessMessage()
@@ -464,7 +477,7 @@ static function GetItens( oJsonCabec )
 
         oJson := JsonObject():New()
 
-        cRet := oJson:FromJSON(DecodeUtf8(  oFwRest:GetResult() ) )
+        cRet := oJson:FromJSON( oFwRest:GetResult() )
 
         nCount := oJson["resultSetMetadata"]["count"]
 
@@ -512,31 +525,46 @@ static function GetFornec( oJsonCabec )
 
     oJson := JsonObject():New()
 
-    cRet := oJson:FromJSON(DecodeUtf8(  oFwRest:GetResult() ) )
+    cRet := oJson:FromJSON( oFwRest:GetResult() )
 
     oJsonCabec['A2_CGC']    := oJson['cnpj']
     oJsonCabec['A2_NOME']   := oJson['name']
 
 return
 
+/*/{Protheus.doc} VldPedCmp
+Efetua as seguintes validações:
+Se o ID do Pedido de Compras já existe na base do Protheus
+Se o ID ou o CNPJ do Fornecedor já existe na base do Protheus e não se encontra bloqueado
+Se o ID do Produto já existe na base do Protheus e não se encontra Bloqueado
+Se há uma conta contábil vinculada ao Produto, se a mesma é válida e não está bloqueada
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 16/09/2020
+@param oJsonCabec, object, Objeto json com os dados do pedido de compras.
+/*/
 static function VldPedCmp( oJsonCabec )
 
     oJsonCabec['criticas']  := aClone( {} )
     oJsonCabec['C7_NUM']    := ''
 
-    // Se o ID do Pedido de Compras já existe na base do Protheus
     JaImportado( oJsonCabec )
 
-    // Se o ID ou o CNPJ do Fornecedor já existe na base do Protheus e não se encontra bloqueado
     FornecOk( oJsonCabec )
 
-    // Se o ID do Produto já existe na base do Protheus e não se encontra Bloqueado
-    // Se há uma conta contábil vinculada ao Produto, se a mesma é válida e não está bloqueada
     ItensOk( oJsonCabec )
 
 return
 
-
+/*/{Protheus.doc} JaImportado
+Se o ID do Pedido de Compras já existe na base do Protheus
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 16/09/2020
+@param oJsonCabec, object, Objeto json com os dados do pedido de compras.
+/*/
 static function JaImportado( oJsonCabec )
 
     Local aArea    := GetArea()
@@ -554,7 +582,14 @@ static function JaImportado( oJsonCabec )
 
 return
 
-
+/*/{Protheus.doc} FornecOk
+Se o ID ou o CNPJ do Fornecedor já existe na base do Protheus e não se encontra bloqueado
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 16/09/2020
+@param oJsonCabec, object, Objeto json com os dados do pedido de compras.
+/*/
 static function FornecOk( oJsonCabec )
 
     Local aArea    := GetArea()
@@ -607,6 +642,15 @@ static function FornecOk( oJsonCabec )
 
 return
 
+/*/{Protheus.doc} ItensOk
+Se o ID do Produto já existe na base do Protheus e não se encontra Bloqueado
+Se há uma conta contábil vinculada ao Produto, se a mesma é válida e não está bloqueada
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 16/09/2020
+@param oJsonCabec, object, Objeto json com os dados do pedido de compras.
+/*/
 static function ItensOk( oJsonCabec )
 
     Local nX       := 0
@@ -679,6 +723,14 @@ static function ItensOk( oJsonCabec )
 
 return
 
+/*/{Protheus.doc} ShowPedCmp
+Exibe a tela com a lista de pedidos de compras retornados na requisição.
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 16/09/2020
+@param aCabPedCmp, array, Array com a lista de Pedidos de Compras 
+/*/
 static Function ShowPedCmp( aCabPedCmp )
 
     Local oBtnCanc    := nil
@@ -738,7 +790,7 @@ static Function ShowPedCmp( aCabPedCmp )
 
     DEFINE MSDIALOG oDlg TITLE "Pedidos de Compras - SIENGE" FROM 000, 000  TO 500, 750 COLORS 0, 16777215 PIXEL
 
-    @ 002, 002 BUTTON oBtnProc PROMPT "Processar" SIZE 037, 012 OF oDlg ACTION Eval( { || cSIECONDPG := cGetCndPag, PrcPedCmp( oBrwLstPed, aCabPedCmp, oDlg ) } ) PIXEL
+    @ 002, 002 BUTTON oBtnProc PROMPT "Processar" SIZE 037, 012 OF oDlg ACTION Eval( { || cSIECONDPG := cGetCndPag, PrcPedCmp( oBrwLstPed, aCabPedCmp ), oDlg:End() } ) PIXEL
     @ 002, 042 BUTTON oButton2 PROMPT "Detalhar" SIZE 037, 012 OF oDlg ACTION DetPedCmp( aCabPedCmp[oBrwLstPed:nAt] ) PIXEL
     @ 002, 082 BUTTON oBtnLegenda PROMPT "Legenda" SIZE 037, 012 OF oDlg ACTION BrwLegenda( 'Situação dos Pedidos de Compras', '', aLegenda) PIXEL
     @ 002, 122 BUTTON oBtnCanc PROMPT "Cancelar" SIZE 037, 012 OF oDlg ACTION oDlg:End() PIXEL
@@ -759,8 +811,6 @@ static Function ShowPedCmp( aCabPedCmp )
         aBrwLstPed[oBrwLstPed:nAt,6];
         }}
 
-    //oBrwLstPed:aSizeCols := {  }
-
     oBrwLstPed:bLDblClick := {||;
         iif( oBrwLstPed:aArray[oBrwLstPed:nAt][2]:cName == 'BR_VERDE', aBrwLstPed[oBrwLstPed:nAt][1] := ! aBrwLstPed[oBrwLstPed:nAt][1], nil ),;
         oBrwLstPed:Refresh()}
@@ -769,6 +819,16 @@ static Function ShowPedCmp( aCabPedCmp )
 
 Return
 
+/*/{Protheus.doc} VldCndPgt
+Faz a validação da condição de pagamento informada/selecionada, verifica se existe no cadastro e se não está bloqueada.
+Também atualiza o conteúdo do campo de descrição da Condição de Pagamento.
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 16/09/2020
+@param oGetCndPag, object, Objeto Tget com o código da condição de pagamento a ser valida
+@param oGetDscCdPg, object, Obejto Tget com a Descrição da Condição de pagamento
+/*/
 static function VldCndPgt( oGetCndPag, oGetDscCdPg )
 
     Local aArea    := GetArea()
@@ -812,7 +872,16 @@ static function VldCndPgt( oGetCndPag, oGetDscCdPg )
 
 return
 
-static function MarcaTodos( oBrwLstPedn, oChkMrkAll )
+/*/{Protheus.doc} MarcaTodos
+Faz a marcação de todos os pedidos Aptos para importação na tela de exibição dos pedidos retornados na rrequisição
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 16/09/2020
+@param oBrwLstPed, object, Objeto com a lista dos pedidos de compras para marcar/desmarcar conforme sinaliza a CheckBox  
+@param oChkMrkAll, object, Objeto CheckBox que sinaliza marcar/desmarcar os pedidos de compras 
+/*/
+static function MarcaTodos( oBrwLstPed, oChkMrkAll )
 
     Local nX := 0
 
@@ -830,7 +899,8 @@ static function MarcaTodos( oBrwLstPedn, oChkMrkAll )
 
 return
 
-static function PrcPedCmp( oBrwLstPed, aCabPedCmp, oDlgPedCmp )
+
+static function PrcPedCmp( oBrwLstPed, aCabPedCmp )
 
     Local aCabec    := {}
     Local aItens    := {}
@@ -874,19 +944,19 @@ static function PrcPedCmp( oBrwLstPed, aCabPedCmp, oDlgPedCmp )
                 nQuantid  := aCabPedCmp[nX]['itens'][nY]['quantity']
                 nPrecUnit := aCabPedCmp[nX]['itens'][nY]['unitPrice']
 
-                aAdd( aLinha, { "C7_ITEM"     , StrZero( nY, 4 )                                   , NIL } )
-                aAdd( aLinha, { "C7_PRODUTO"  , aCabPedCmp[nX]['itens'][nY]['B1_COD']              , nil } )
-                aAdd( aLinha, { "C7_DESCRI"   , aCabPedCmp[nX]['itens'][nY]['resourceDescription'] , nil } )
-                aAdd( aLinha, { "C7_QUANT"    , aCabPedCmp[nX]['itens'][nY]['quantity']            , nil } )
-                aAdd( aLinha, { "C7_PRECO"    , aCabPedCmp[nX]['itens'][nY]['unitPrice']           , nil } )
-                aAdd( aLinha, { "C7_TOTAL"    , nQuantid * nPrecUnit                               , nil } )
-                aAdd( aLinha, { "C7_OBSM"     , aCabPedCmp[nX]['itens'][nY]['notes']               , nil } )
-                aAdd( aLinha, { "C7_LOCAL"    , '01'                                               , nil } )
-                aAdd( aLinha, { "C7_CC"       , cSIECCUSTO                                         , nil } )
-                aAdd( aLinha, { "C7_ITEMCTA"  , cSIEATVPRJ                                         , nil } )
-                aAdd( aLinha, { "C7_CONTA"    , aCabPedCmp[nX]['itens'][nY]['B1_CONTA']            , nil } )
-                aAdd( aCabec, { "C7_CONAPRO" , 'L'                                                 , nil } )
-                aAdd( aCabec, { "C7_XSIENGE" , cValTochar( aCabPedCmp[nX]['id'] )                  , nil } )
+                aAdd( aLinha, { "C7_ITEM"     , StrZero( nY, 4 )                                                 , NIL } )
+                aAdd( aLinha, { "C7_PRODUTO"  , aCabPedCmp[nX]['itens'][nY]['B1_COD']                            , nil } )
+                aAdd( aLinha, { "C7_DESCRI"   , DecodeUtf8( aCabPedCmp[nX]['itens'][nY]['resourceDescription'] ) , nil } )
+                aAdd( aLinha, { "C7_QUANT"    , aCabPedCmp[nX]['itens'][nY]['quantity']                          , nil } )
+                aAdd( aLinha, { "C7_PRECO"    , aCabPedCmp[nX]['itens'][nY]['unitPrice']                         , nil } )
+                aAdd( aLinha, { "C7_TOTAL"    , nQuantid * nPrecUnit                                             , nil } )
+                aAdd( aLinha, { "C7_OBSM"     , aCabPedCmp[nX]['itens'][nY]['notes']                             , nil } )
+                aAdd( aLinha, { "C7_LOCAL"    , '01'                                                             , nil } )
+                aAdd( aLinha, { "C7_CC"       , cSIECCUSTO                                                       , nil } )
+                aAdd( aLinha, { "C7_ITEMCTA"  , cSIEATVPRJ                                                       , nil } )
+                aAdd( aLinha, { "C7_CONTA"    , aCabPedCmp[nX]['itens'][nY]['B1_CONTA']                          , nil } )
+                aAdd( aCabec, { "C7_CONAPRO" , 'L'                                                               , nil } )
+                aAdd( aCabec, { "C7_XSIENGE" , cValTochar( aCabPedCmp[nX]['id'] )                                , nil } )
                 aAdd( aCabec, { "C7_OBS"     , cValTochar( aCabPedCmp[nX]['id'] )  +;
                     '/' + aCabPedCmp[nX]['buyerId'] , nil } )
 
@@ -904,8 +974,6 @@ static function PrcPedCmp( oBrwLstPed, aCabPedCmp, oDlgPedCmp )
     next nX
 
     PutMv( 'SIE_CONDPG', cSIECONDPG )
-
-    oDlgPedCmp:End()
 
     ShowResProc( aResProc )
 
@@ -1030,7 +1098,7 @@ Static Function DetPedCmp( oJsonCabec )
         Aadd( aBrwItPed, {;
             cValToChar( oJsonCabec['itens'][nX]['resourceId'] ),;
             oJsonCabec['itens'][nX]['B1_COD'],;
-            oJsonCabec['itens'][nX]['resourceDescription'],;
+            DecodeUtf8( oJsonCabec['itens'][nX]['resourceDescription'] ),;
             iif( Empty( oJsonCabec['C7_NUM'] ), oJsonCabec['itens'][nX]['situacao'], '' ) } )
 
     next nX
