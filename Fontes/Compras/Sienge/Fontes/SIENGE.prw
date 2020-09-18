@@ -132,7 +132,7 @@ Return
 
 /*/{Protheus.doc} GetEmpNome
 Busca no SIENGE o nome de um Empreeendimento mediante o id
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 16/09/2020
@@ -285,8 +285,6 @@ static function RunData( dDe, dAte )
         FreeObj( oJson   )
         FreeObj( oFwRest )
 
-        //if nCount >= ( ( nLimit * nOffSet ) + 1 ) .And. nCount <= ( nLimit * ( nOffSet  + 1 ) )
-
         if nCount < ( nLimit * nOffSet ) + 1
 
             Exit
@@ -294,6 +292,8 @@ static function RunData( dDe, dAte )
         End If
 
     End Do
+
+     aSort( aRet,,, { | X, Y | X['id'] < Y['id'] } )
 
 return aRet
 
@@ -396,7 +396,7 @@ return aRet
 /*/{Protheus.doc} ProcPedCmp
 Processa a lista de pedidos de compras recebida buscando seus itens correspondentes e fazendo as validações do Pedido de Compras
 e exibe a tela com a lista dos pedidos retornados
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 09/09/2020
@@ -412,7 +412,7 @@ return
 
 /*/{Protheus.doc} RunPedCmp
 Processa a lista de pedidos de compras recebida buscando seus itens correspondentes e fazendo as validações do Pedido de Compras
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 09/09/2020
@@ -441,7 +441,7 @@ return
 
 /*/{Protheus.doc} GetItens
 Busca no SIENGE os itens dos Pedido de Compra
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 14/09/2020
@@ -504,7 +504,7 @@ return
 
 /*/{Protheus.doc} GetFornec
 Busca no SIENGE o CNPJ do fornecedor do Pedido de Compra
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 14/09/2020
@@ -538,7 +538,7 @@ Se o ID do Pedido de Compras já existe na base do Protheus
 Se o ID ou o CNPJ do Fornecedor já existe na base do Protheus e não se encontra bloqueado
 Se o ID do Produto já existe na base do Protheus e não se encontra Bloqueado
 Se há uma conta contábil vinculada ao Produto, se a mesma é válida e não está bloqueada
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 16/09/2020
@@ -559,7 +559,7 @@ return
 
 /*/{Protheus.doc} JaImportado
 Se o ID do Pedido de Compras já existe na base do Protheus
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 16/09/2020
@@ -584,7 +584,7 @@ return
 
 /*/{Protheus.doc} FornecOk
 Se o ID ou o CNPJ do Fornecedor já existe na base do Protheus e não se encontra bloqueado
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 16/09/2020
@@ -645,7 +645,7 @@ return
 /*/{Protheus.doc} ItensOk
 Se o ID do Produto já existe na base do Protheus e não se encontra Bloqueado
 Se há uma conta contábil vinculada ao Produto, se a mesma é válida e não está bloqueada
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 16/09/2020
@@ -725,7 +725,7 @@ return
 
 /*/{Protheus.doc} ShowPedCmp
 Exibe a tela com a lista de pedidos de compras retornados na requisição.
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 16/09/2020
@@ -743,7 +743,7 @@ static Function ShowPedCmp( aCabPedCmp )
     Local oGetDscCdPg := nil
     Local cGetDscCdPg := Posicione( 'SE4', 1, xFilial('SE4') + cSIECONDPG, 'E4_DESCRI' )
     Local oGetEmp     := nil
-    Local cGetEmp     := cSIEEMPRES + ' - ' + cSIEEMPNOM
+    Local cGetEmp     := DecodeUTF8( cSIEEMPRES + ' - ' + cSIEEMPNOM )
     Local oSayCndPag  := nil
     Local oSayEmp     := nil
     Local oBrwLstPed  := nil
@@ -784,17 +784,17 @@ static Function ShowPedCmp( aCabPedCmp )
         end if
 
         Aadd(aBrwLstPed,{ .F., oLegenda, cValToChar( aCabPedCmp[nX]['id'] ),;
-            aCabPedCmp[nX]['C7_NUM'], aCabPedCmp[nX]['A2_NOME'], aCabPedCmp[nX]['buyerId'] } )
+            aCabPedCmp[nX]['C7_NUM'], SubStr( DecodeUTF8( aCabPedCmp[nX]['A2_NOME'] ), 1, 45 ), aCabPedCmp[nX]['buyerId'] } )
 
     next nX
 
     DEFINE MSDIALOG oDlg TITLE "Pedidos de Compras - SIENGE" FROM 000, 000  TO 500, 750 COLORS 0, 16777215 PIXEL
 
-    @ 002, 002 BUTTON oBtnProc PROMPT "Processar" SIZE 037, 012 OF oDlg ACTION Eval( { || cSIECONDPG := cGetCndPag, PrcPedCmp( oBrwLstPed, aCabPedCmp ), oDlg:End() } ) PIXEL
+    @ 002, 002 BUTTON oBtnProc PROMPT "Processar" SIZE 037, 012 OF oDlg ACTION Eval( { || cSIECONDPG := cGetCndPag, iif( PrcPedCmp( oBrwLstPed, aCabPedCmp ), oDlg:End(), nil ) } ) PIXEL
     @ 002, 042 BUTTON oButton2 PROMPT "Detalhar" SIZE 037, 012 OF oDlg ACTION DetPedCmp( aCabPedCmp[oBrwLstPed:nAt] ) PIXEL
     @ 002, 082 BUTTON oBtnLegenda PROMPT "Legenda" SIZE 037, 012 OF oDlg ACTION BrwLegenda( 'Situação dos Pedidos de Compras', '', aLegenda) PIXEL
     @ 002, 122 BUTTON oBtnCanc PROMPT "Cancelar" SIZE 037, 012 OF oDlg ACTION oDlg:End() PIXEL
-    @ 022, 005 CHECKBOX oChkMrkAll VAR lChkMrkAll PROMPT "Marca todos os Aptos" SIZE 063, 008 OF oDlg COLORS 0, 16777215 ON CHANGE MarcaTodos( oBrwLstPed, oChkMrkAll ) PIXEL
+    @ 022, 005 CHECKBOX oChkMrkAll VAR lChkMrkAll PROMPT "Marca todos os Aptos" SIZE 063, 008 OF oDlg COLORS 0, 16777215 ON CHANGE MarcaTodos( oBrwLstPed, lChkMrkAll ) PIXEL
     @ 022, 075 SAY oSayCndPag PROMPT "Cond. de Pagamento:" SIZE 055, 007 OF oDlg COLORS 0, 16777215 PIXEL
     @ 021, 133 MSGET oGetCndPag VAR cGetCndPag SIZE 030, 010 OF oDlg COLORS 0, 16777215 ON CHANGE VldCndPgt( oGetCndPag, oGetDscCdPg ) F3 "SE4" HASBUTTON PIXEL
     @ 021, 172 MSGET oGetDscCdPg VAR cGetDscCdPg SIZE 195, 010 OF oDlg COLORS 0, 16777215 READONLY PIXEL
@@ -822,7 +822,7 @@ Return
 /*/{Protheus.doc} VldCndPgt
 Faz a validação da condição de pagamento informada/selecionada, verifica se existe no cadastro e se não está bloqueada.
 Também atualiza o conteúdo do campo de descrição da Condição de Pagamento.
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 16/09/2020
@@ -874,14 +874,15 @@ return
 
 /*/{Protheus.doc} MarcaTodos
 Faz a marcação de todos os pedidos Aptos para importação na tela de exibição dos pedidos retornados na rrequisição
-@type user function
+@type static function
 @version 12.1.27
 @author elton.alves@totvs.com.br
 @since 16/09/2020
 @param oBrwLstPed, object, Objeto com a lista dos pedidos de compras para marcar/desmarcar conforme sinaliza a CheckBox  
-@param oChkMrkAll, object, Objeto CheckBox que sinaliza marcar/desmarcar os pedidos de compras 
+@param lChkMrkAll, logical, Indica se o ckeckbox de marcar todos está marcado ou não 
 /*/
-static function MarcaTodos( oBrwLstPed, oChkMrkAll )
+
+static function MarcaTodos( oBrwLstPed, lChkMrkAll )
 
     Local nX := 0
 
@@ -889,7 +890,7 @@ static function MarcaTodos( oBrwLstPed, oChkMrkAll )
 
         if oBrwLstPed:aArray[nX][2]:cName == 'BR_VERDE'
 
-            oBrwLstPed:aArray[nX][1] := oChkMrkAll:lModified
+            oBrwLstPed:aArray[nX][1] := lChkMrkAll
 
         end if
 
@@ -899,7 +900,20 @@ static function MarcaTodos( oBrwLstPed, oChkMrkAll )
 
 return
 
-
+/*/{Protheus.doc} PrcPedCmp
+Processa os pedidos marcados, montando e enviando para gravação na base
+@type static function
+@version 12.1.27
+@author elton.alves@gmail.com   
+@since 17/09/2020
+@param oBrwLstPed, object, Objeto que representa o Browse com a lista de pedido marcados para importação.
+@param aCabPedCmp, array, Array com a lista de Pedidos de compras a serem importados.
+@obs O posição do pedido no browse corresponde a posição do mesmo no array,
+assim é considerado para importação quem estiver marcado para importar.
+O que tiverem legenda diferente de BR_VERDE não podem ser marcados e assim não serão importados.
+@return logical, Retorna .T caso tenha executado a inclusão de pedidos e .F. caso apenas tenha exibido alguma mensagem ao usuário,
+tem a finalidade de sinalizar para a tela com a lista de pedido se a mesma deve ou não ser fechada..
+/*/
 static function PrcPedCmp( oBrwLstPed, aCabPedCmp )
 
     Local aCabec    := {}
@@ -913,15 +927,15 @@ static function PrcPedCmp( oBrwLstPed, aCabPedCmp )
 
     if Empty( cSIECONDPG )
 
-        ApMsgAlert( 'Informe uma Concidição de Pagamento Válida', 'SIENGE' )
+        ApMsgAlert( 'Informe uma Condição de Pagamento Válida', 'SIENGE' )
 
-        return
+        return .F.
 
     elseif aScan( oBrwLstPed:aArray, { |item| item[1] } ) == 0
 
-        ApMsgAlert( 'Nenhum Pedido foi selecionado para se importado', 'SIENGE' )
+        ApMsgAlert( 'Nenhum Pedido foi selecionado para ser importado', 'SIENGE' )
 
-        return
+        return .F.
 
     end if
 
@@ -929,7 +943,7 @@ static function PrcPedCmp( oBrwLstPed, aCabPedCmp )
 
         if oBrwLstPed:aArray[nX][1]
 
-            aadd( aCabec, { "C7_NUM"     , GetNumSC7()                                         } )
+            aadd( aCabec, { "C7_NUM"     , ''                                                  } )
             aadd( aCabec, { "C7_EMISSAO" , StoD( StrTran( aCabPedCmp[nX]['date'], '-', '' ) )  } )
             aAdd( aCabec, { "C7_FORNECE" , aCabPedCmp[nX]['A2_COD']                            } )
             aAdd( aCabec, { "C7_LOJA"    , aCabPedCmp[nX]['A2_LOJA']                           } )
@@ -950,15 +964,11 @@ static function PrcPedCmp( oBrwLstPed, aCabPedCmp )
                 aAdd( aLinha, { "C7_QUANT"    , aCabPedCmp[nX]['itens'][nY]['quantity']                          , nil } )
                 aAdd( aLinha, { "C7_PRECO"    , aCabPedCmp[nX]['itens'][nY]['unitPrice']                         , nil } )
                 aAdd( aLinha, { "C7_TOTAL"    , nQuantid * nPrecUnit                                             , nil } )
-                aAdd( aLinha, { "C7_OBSM"     , aCabPedCmp[nX]['itens'][nY]['notes']                             , nil } )
+                aAdd( aLinha, { "C7_OBSM"     , DecodeUtf8( aCabPedCmp[nX]['itens'][nY]['notes'] )               , nil } )
                 aAdd( aLinha, { "C7_LOCAL"    , '01'                                                             , nil } )
                 aAdd( aLinha, { "C7_CC"       , cSIECCUSTO                                                       , nil } )
                 aAdd( aLinha, { "C7_ITEMCTA"  , cSIEATVPRJ                                                       , nil } )
                 aAdd( aLinha, { "C7_CONTA"    , aCabPedCmp[nX]['itens'][nY]['B1_CONTA']                          , nil } )
-                aAdd( aCabec, { "C7_CONAPRO" , 'L'                                                               , nil } )
-                aAdd( aCabec, { "C7_XSIENGE" , cValTochar( aCabPedCmp[nX]['id'] )                                , nil } )
-                aAdd( aCabec, { "C7_OBS"     , cValTochar( aCabPedCmp[nX]['id'] )  +;
-                    '/' + aCabPedCmp[nX]['buyerId'] , nil } )
 
                 aAdd( aItens, aClone( aLinha ) )
 
@@ -969,6 +979,9 @@ static function PrcPedCmp( oBrwLstPed, aCabPedCmp )
             MsgRun( 'Importando o Pedido ' + cValTochar( aCabPedCmp[nX]['id'] ), 'Aguarde alguns instantes...',;
                 { || aAdd( aResProc, ExAutMT120( aCabec, aItens ) ) } )
 
+                aSize( aCabec, 0 )
+                aSize( aItens, 0 )
+
         end if
 
     next nX
@@ -977,8 +990,18 @@ static function PrcPedCmp( oBrwLstPed, aCabPedCmp )
 
     ShowResProc( aResProc )
 
-return
+return .T.
 
+/*/{Protheus.doc} ExAutMT120
+Processa o execauto MATA120 com a inclusão do pedido de compras.
+@type static function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 17/09/2020
+@param aCabec, array, Array com a lista de campos e valores do cabeçalho do pedido de compras
+@param aItens, array, Array com a lista de campos e valores dos itens do pedido de compras
+@return array, Array com a descrição dos erros, caso não tenha ocorrido erros retorna um array vazio
+/*/
 static function ExAutMT120( aCabec, aItens )
 
     Local aErro    := {}
@@ -987,7 +1010,7 @@ static function ExAutMT120( aCabec, aItens )
     Local aRet     := {}
     Local cId      := aCabec[aScan( aCabec, { | X | X[1] == 'C7_XSIENGE' } )][2]
     Local cObs     := aCabec[aScan( aCabec, { | X | X[1] == 'C7_OBS'     } )][2]
-    Local cNum     := aCabec[aScan( aCabec, { | X | X[1] == 'C7_NUM'     } )][2]
+    Local cNum     := ''
     Local aAreaSC7 := SC7->( GetArea() )
 
     Private lMsErroAuto    := .F.
@@ -995,6 +1018,10 @@ static function ExAutMT120( aCabec, aItens )
     Private lAutoErrNoFile := .T.
 
     Begin Transaction
+
+        cNum := GetNumSC7()
+
+        aCabec[ aScan( aCabec, { | X | X[1] == 'C7_NUM' } )][2] := cNum
 
         MsExecAuto( { |a,b,c,d| MATA120(a,b,c,d) }, 1, aCabec, aItens, 3 )
 
@@ -1006,7 +1033,7 @@ static function ExAutMT120( aCabec, aItens )
 
             for nX := 1 to Len( aErro )
 
-                cErro += aErro + CRLF
+                cErro += aErro[ nX ] + CRLF
 
             next nX
 
@@ -1016,7 +1043,7 @@ static function ExAutMT120( aCabec, aItens )
 
         else
 
-            if SC7->( DbSeek( xFilial() + cNum ) )
+            if SC7->( DbSeek( xFilial('SC7') + cNum ) )
 
                 Do While SC7->( ! Eof() .And. C7_FILIAL + C7_NUM == xFilial() + cNum )
 
@@ -1036,7 +1063,7 @@ static function ExAutMT120( aCabec, aItens )
 
             SC7->( RestArea( aAreaSC7 ) )
 
-            aRet := { cId, cNum, 'Pedido Gerado', '' }
+            aRet := { cId, cNum, 'Pedido Gerado', 'Pedido Gerado' }
 
         end if
 
@@ -1044,29 +1071,46 @@ static function ExAutMT120( aCabec, aItens )
 
 return aRet
 
-static function  ShowResProc( aBrwItPed )
+/*/{Protheus.doc} ShowResProc
+Exibe o resultado do processamento e nos detalhes o erro que possa ter ocorrido
+@type static function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 17/09/2020
+@param aResProc, array, Array com a lista de erros para cada pedido importado
+/*/
+static function  ShowResProc( aResProc )
 
     Local oBtnDet    := nil
     Local oBtnFechar := nil
     Local oDlg       := nil
-    Local oBrwItPed  := nil
+    Local oResProc   := nil
 
     DEFINE MSDIALOG oDlg TITLE "Pedidos de Compras - SIENGE" FROM 000, 000  TO 500, 750 COLORS 0, 16777215 PIXEL
 
-    @ 002, 002 BUTTON oBtnDet PROMPT "Detalhar" SIZE 037, 012 OF oDlg ACTION Eval( { || AutoGrLog( aBrwItPed[oBrwItPed:nAt, 4 ] ), MostraErro() } ) PIXEL
+    @ 002, 002 BUTTON oBtnDet PROMPT "Detalhar" SIZE 037, 012 OF oDlg ACTION Eval( { || AutoGrLog( aResProc[oResProc:nAt, 4 ] ), MostraErro() } ) PIXEL
     @ 002, 045 BUTTON oBtnFechar PROMPT "Fechar" SIZE 037, 012 OF oDlg ACTION oDlg:End() PIXEL
-    @ 020, 004 LISTBOX oBrwItPed Fields HEADER "ID","Número","Situação" SIZE 364, 224 OF oDlg PIXEL ColSizes 50,50
-    oBrwItPed:SetArray(aBrwItPed)
-    oBrwItPed:bLine := {|| {;
-        aBrwItPed[oBrwItPed:nAt,1],;
-        aBrwItPed[oBrwItPed:nAt,2],;
-        aBrwItPed[oBrwItPed:nAt,3];
+    @ 020, 004 LISTBOX oResProc Fields HEADER "ID","Número","Situação" SIZE 364, 224 OF oDlg PIXEL ColSizes 50,50
+    oResProc:SetArray(aResProc)
+    oResProc:bLine := {|| {;
+        aResProc[oResProc:nAt,1],;
+        aResProc[oResProc:nAt,2],;
+        aResProc[oResProc:nAt,3];
         }}
 
     ACTIVATE MSDIALOG oDlg CENTERED
 
 return
 
+/*/{Protheus.doc} DetPedCmp
+Exibe detalhes do pedido de compras posicinado na lista exibida.
+É exibido dados dos itens e também críticas que impedem o pedido de ser importado.
+@type static function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 17/09/2020
+@param oJsonCabec, object, Objeto json com os dados do pedido de compras
+/*/
 Static Function DetPedCmp( oJsonCabec )
 
     Local oBtnEnd     := nil
@@ -1077,7 +1121,7 @@ Static Function DetPedCmp( oJsonCabec )
     Local oGetID      := nil
     Local cGetID      := cValToChar( oJsonCabec['supplierId'] )
     Local oGetNome    := nil
-    Local cGetNome    := oJsonCabec['A2_NOME']
+    Local cGetNome    := DecodeUTF8( oJsonCabec['A2_NOME'] )
     Local oGrpCritic  := nil
     Local oGrpFornec  := nil
     Local oGrpItPed   := nil

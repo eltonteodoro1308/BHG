@@ -1,0 +1,10 @@
+- Consulta
+	Data Emissão
+	id 
+	id documento
+
+- Quantidade com o valor e valor fixo 1,00
+- Produto no cadastro do fornecedor
+
+
+faturamento direto

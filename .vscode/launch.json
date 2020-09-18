@@ -139,7 +139,12 @@
 			"args": [],
 			"label": "SIGAADV",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "u_inputbox",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "SIGACOM"
+	"lastProgramExecuted": "SIGAMDI"
 }
