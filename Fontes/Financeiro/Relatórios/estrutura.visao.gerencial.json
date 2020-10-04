@@ -1,0 +1,35 @@
+{
+  "NOME_COLUNAS1": [],
+  "NOME_COLUNAS2": [],
+  "LISTA_ENTIDADES": [
+    {
+      "ENTIDADE_GERENCIAL": "1",
+      "DESCRICAO": "PAGAR",
+      "ORDEM": "1",
+      "VALORES": [],
+      "ENTIDADES_INFERIORES": [
+        {
+          "ENTIDADE_GERENCIAL": "1",
+          "DESCRICAO": "PAGAR",
+          "ORDEM": "1",
+          "VALORES": [],
+          "ENTIDADES_INFERIORES": []
+        },
+        {
+          "ENTIDADE_GERENCIAL": "1",
+          "DESCRICAO": "PAGAR",
+          "ORDEM": "1",
+          "VALORES": [],
+          "ENTIDADES_INFERIORES": []
+        }
+      ]
+    },
+    {
+      "ENTIDADE_GERENCIAL": "1",
+      "DESCRICAO": "PAGAR",
+      "ORDEM": "1",
+      "VALORES": [],
+      "ENTIDADES_INFERIORES": []
+    }
+  ]
+}

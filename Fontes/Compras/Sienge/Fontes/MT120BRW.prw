@@ -7,7 +7,14 @@ Adiciona botões à rotina de Pedido de Compras
 /*/
 User Function MT120BRW()
 
+    Local aMenuSienge := {}
+
     // Rotina de Importação de Pedidos de Compras do SIENGE (Fonte SIENGE.prw)
-    AAdd( aRotina, { 'Integraçao Sienge', 'U_SIENGE()', 0, 3 } )
+    aAdd( aMenuSienge, { 'Pedido de Compras', 'U_SIENGEPC()', 0, 3 } )
+   
+    // Rotina de Importação de Serviços do SIENGE (Fonte SIENGE.prw)
+    aAdd( aMenuSienge, { 'Serviços'         , 'U_SIENGESV()', 0, 3 } )
+
+    AAdd( aRotina, { 'Integraçao Sienge', aMenuSienge, 0, 3 } )
 
 Return

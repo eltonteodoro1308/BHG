@@ -144,7 +144,22 @@
 			"args": [],
 			"label": "u_inputbox",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "BFINR001",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_BFINR001",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_SiengeSv",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "APSDU"
+	"lastProgramExecuted": "SIGACOM"
 }
