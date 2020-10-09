@@ -755,7 +755,7 @@ static Function ShowPedCmp( aCabPedCmp )
 
         end if
 
-        Aadd(aBrwLstPed,{ .F., oLegenda, cValToChar( aCabPedCmp[nX]['id'] ),;
+        Aadd(aBrwLstPed,{ .F., oLegenda, cValToChar( aCabPedCmp[nX]['id'] ), cValToChar( aCabPedCmp[nX]['documentNumber'] ),;
             aCabPedCmp[nX]['C7_NUM'], SubStr( DecodeUTF8( aCabPedCmp[nX]['A2_NOME'] ), 1, 45 ), '' } )
 
     next nX
@@ -772,7 +772,7 @@ static Function ShowPedCmp( aCabPedCmp )
     @ 021, 172 MSGET oGetDscCdPg VAR cGetDscCdPg SIZE 195, 010 OF oDlg COLORS 0, 16777215 READONLY PIXEL
     @ 037, 005 SAY oSayEmp PROMPT "Empresa:" SIZE 025, 007 OF oDlg COLORS 0, 16777215 PIXEL
     @ 036, 031 MSGET oGetEmp VAR cGetEmp SIZE 337, 010 OF oDlg COLORS 0, 16777215 READONLY PIXEL
-    @ 055, 005 LISTBOX oBrwLstPed Fields HEADER "","","ID","Num. Serviço","Fornecedor","Comprador" SIZE 363, 190 OF oDlg PIXEL ColSizes 50,50
+    @ 055, 005 LISTBOX oBrwLstPed Fields HEADER "","","ID","Documento","Num. Pedido","Fornecedor","Comprador" SIZE 363, 190 OF oDlg PIXEL ColSizes 50,50
     oBrwLstPed:SetArray(aBrwLstPed)
     oBrwLstPed:bLine := {|| {;
         iif(aBrwLstPed[oBrwLstPed:nAt,01],oOK,oNO),;
@@ -780,7 +780,8 @@ static Function ShowPedCmp( aCabPedCmp )
         aBrwLstPed[oBrwLstPed:nAt,3],;
         aBrwLstPed[oBrwLstPed:nAt,4],;
         aBrwLstPed[oBrwLstPed:nAt,5],;
-        aBrwLstPed[oBrwLstPed:nAt,6];
+        aBrwLstPed[oBrwLstPed:nAt,6],;
+        aBrwLstPed[oBrwLstPed:nAt,7];
         }}
 
     oBrwLstPed:bLDblClick := {||;
@@ -920,6 +921,7 @@ static function PrcPedCmp( oBrwLstPed, aCabPedCmp )
             aAdd( aCabec, { "C7_COND"    , cSIECONDPG                                              } )
             aAdd( aCabec, { "C7_CONAPRO" , 'L'                                                     } )
             aAdd( aCabec, { "C7_XSIESRV" , cValTochar( aCabPedCmp[nX]['id'] )                      } )
+            aAdd( aCabec, { "C7_XSIEDOC" , cValTochar( aCabPedCmp[nX]['documentNumber'] )          } )
 
             nPrecUnit := aCabPedCmp[nX]['totalInvoiceAmount']
 
@@ -969,6 +971,7 @@ static function ExAutMT120( aCabec, aItens )
     Local nX       := 0
     Local aRet     := {}
     Local cId      := aCabec[aScan( aCabec, { | X | X[1] == 'C7_XSIESRV' } )][2]
+    Local cDoc     := aCabec[aScan( aCabec, { | X | X[1] == 'C7_XSIEDOC' } )][2]
     Local cNum     := ''
     Local aAreaSC7 := SC7->( GetArea() )
 
@@ -1009,6 +1012,7 @@ static function ExAutMT120( aCabec, aItens )
                     RecLock( 'SC7', .F. )
 
                     SC7->C7_XSIESRV := cId
+                    // SC7->C7_XSIEDOC := cDoc
                     SC7->C7_CONAPRO := 'L'
 
                     SC7->( MsUnlock() )
@@ -1072,6 +1076,7 @@ Exibe detalhes do pedido de compras posicinado na lista exibida.
 Static Function DetPedCmp( oJsonCabec )
 
     Local oBtnEnd     := nil
+    Local oBtnTrcPrd  := nil
     Local oGetCNPJ    := nil
     Local cGetCNPJ    := oJsonCabec['A2_CGC']
     Local oGetCodLoja := nil
@@ -1123,7 +1128,8 @@ Static Function DetPedCmp( oJsonCabec )
 
     DEFINE MSDIALOG oDlg TITLE "Pedidos de Compras - SIENGE - ID: " + cValToChar( oJsonCabec['id'] ) FROM 000, 000  TO 500, 750 COLORS 0, 16777215 PIXEL
 
-    @ 002, 002 BUTTON oBtnEnd PROMPT "Fechar" SIZE 037, 012 OF oDlg ACTION oDlg:End() PIXEL
+    @ 002, 002 BUTTON oBtnTrcPrd PROMPT "Ajustar Prod." SIZE 037, 012 OF oDlg ACTION TrocaProd( oJsonCabec, oBrwItPed ) PIXEL
+    @ 002, 042 BUTTON oBtnEnd PROMPT "Fechar" SIZE 037, 012 OF oDlg ACTION oDlg:End() PIXEL
     @ 020, 002 GROUP oGrpFornec TO 058, 370 PROMPT "Fornecedor" OF oDlg COLOR 0, 16777215 PIXEL
     @ 030, 007 SAY oSayID PROMPT "ID" SIZE 025, 007 OF oDlg COLORS 0, 16777215 PIXEL
     @ 030, 053 SAY oSayCodLoja PROMPT "Código/Loja" SIZE 040, 007 OF oDlg COLORS 0, 16777215 PIXEL
@@ -1148,9 +1154,123 @@ Static Function DetPedCmp( oJsonCabec )
     oMltGetCrt:EnableVScroll( .T. )
     oMltGetCrt:AppendText( cCriticas )
 
+    if ! Empty( oJsonCabec['C7_NUM'] ) .Or.;
+            Len( oJsonCabec['criticas'] ) # 0 .Or.;
+            aScan( oJsonCabec['itens'], { |item|  item['situacao'] # 'OK' } ) # 0
+
+        oBtnTrcPrd:Disable()
+
+    end if
+
     ACTIVATE MSDIALOG oDlg CENTERED
 
 return
+
+/*/{Protheus.doc} TrocaProd
+Exibe tela para selecionar outro produto no lugar do produto informado no cadastro do fornecedor.
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 09/10/2020
+@param oJsonCabec, object, Objeto json com os dados do serviço.
+@param oBrwItPed, object, Objeto do browser com os dados do produto para se atualizado com os dados do produto selecionado.
+/*/
+static function TrocaProd( oJsonCabec, oBrwItPed )
+
+    Local oBtnCanc := nil
+    Local oBtnOk   := nil
+    Local oGetProd := nil
+    Local cGetProd := Space( GetSx3Cache( 'B1_COD', 'X3_TAMANHO' ) )
+    Local oDlg     := nil
+
+    DEFINE MSDIALOG oDlg TITLE "Selecione o Produto" FROM 000, 000  TO 100, 170 COLORS 0, 16777215 PIXEL
+
+    @ 005, 005 BUTTON oBtnOk PROMPT "Ok" SIZE 037, 012 OF oDlg ACTION;
+        IIf( Eval( { || AjustaProd( oJsonCabec, oBrwItPed, cGetProd ) } ), oDlg:End(), nil )  PIXEL
+    @ 005, 045 BUTTON oBtnCanc PROMPT "Cancelar" SIZE 037, 012 OF oDlg ACTION oDlg:End() PIXEL
+    @ 025, 005 MSGET oGetProd VAR cGetProd SIZE 077, 010 OF oDlg PICTURE  GetSx3Cache( 'B1_COD', 'X3_PICTURE' )  F3 'SB1' COLORS 0, 16777215 HASBUTTON PIXEL
+
+    ACTIVATE MSDIALOG oDlg CENTERED
+
+Return
+
+/*/{Protheus.doc} AjustaProd
+Ajusta e valida o produto selecionado no browser e no ojeto json
+@type user function
+@version 12.1.27
+@author elton.alves@totvs.com.br
+@since 09/10/2020
+@param oJsonCabec, object, Objeto json com os dados do serviço.
+@param oBrwItPed, object, Objeto do browser com os dados do produto para se atualizado com os dados do produto selecionado.
+@param cGetProd, character, Código do produto informado pelo usuário
+@return logical, indica se o produto informado é valído
+/*/
+static function AjustaProd( oJsonCabec, oBrwItPed, cGetProd  )
+
+    Local aArea := GetArea()
+    Local lRet  := .F.
+
+    DbSelectArea( 'SB1' )
+    SB1->( DbSetOrder( 1 ) )
+
+    if ! Empty( cGetProd ) .And.;
+            SB1->( DbSeek(  xFilial() + cGetProd ) )
+
+        if SB1->B1_MSBLQL == '1'
+
+            ApMsgStop( 'Produto não bloqueado.', 'SIENGESV' )
+
+        else
+
+            if Empty( SB1->B1_CONTA )
+
+                ApMsgStop( 'Produto sem Conta Contábil informada em seu cadastro', 'SIENGESV' )
+
+            else
+
+                DbSelectArea( 'CT1' )
+                CT1->( DbSetOrder( 1 ) )
+
+                if CT1->( DbSeek( SB1->( xFilial('CT1') + B1_CONTA ) ) )
+
+                    if CT1->CT1_MSBLQL == '1'
+
+                        ApMsgStop( 'Produto com Conta Contábil bloqueada.', 'SIENGESV' )
+
+                    else
+
+                        oJsonCabec['itens'][1]['B1_COD']   := SB1->B1_COD
+                        oJsonCabec['itens'][1]['B1_DESC']  := SB1->B1_DESC
+                        oJsonCabec['itens'][1]['B1_CONTA'] := SB1->B1_CONTA
+
+                        oBrwItPed:aArray[1][2] :=  oJsonCabec['itens'][1]['B1_COD']
+                        oBrwItPed:aArray[1][3] :=  oJsonCabec['itens'][1]['B1_DESC']
+
+                        oBrwItPed:Refresh()
+
+                        lRet := .T.
+
+                    end if
+
+                else
+
+                    ApMsgStop( 'Produto com Conta Contábil inválida em seu cadastro.', 'SIENGESV' )
+
+                end if
+
+            end if
+
+        end if
+
+    else
+
+        ApMsgStop( 'Informe um Produto válido', 'SIENGESV' )
+
+    end if
+
+    RestArea( aArea )
+
+return lRet
 
 /*/{Protheus.doc} DateFormat
 Formata uma data para uma string no formato yyyy-MM-dd aceito pelo SIENGE
