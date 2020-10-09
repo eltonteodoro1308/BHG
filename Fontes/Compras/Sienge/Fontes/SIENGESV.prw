@@ -1012,7 +1012,7 @@ static function ExAutMT120( aCabec, aItens )
                     RecLock( 'SC7', .F. )
 
                     SC7->C7_XSIESRV := cId
-                    // SC7->C7_XSIEDOC := cDoc
+                    SC7->C7_XSIEDOC := cDoc
                     SC7->C7_CONAPRO := 'L'
 
                     SC7->( MsUnlock() )
