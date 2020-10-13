@@ -1240,7 +1240,7 @@ static function AjustaProd( oJsonCabec, oBrwItPed, cGetProd  )
                     else
 
                         oJsonCabec['itens'][1]['B1_COD']   := SB1->B1_COD
-                        oJsonCabec['itens'][1]['B1_DESC']  := SB1->B1_DESC
+                        oJsonCabec['itens'][1]['B1_DESC']  := EncodeUTF8( SB1->B1_DESC )
                         oJsonCabec['itens'][1]['B1_CONTA'] := SB1->B1_CONTA
 
                         oBrwItPed:aArray[1][2] :=  oJsonCabec['itens'][1]['B1_COD']
