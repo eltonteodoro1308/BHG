@@ -1,0 +1,34 @@
+<TOTVSIntegrator>
+	<GlobalProduct>CMNET</GlobalProduct>
+	<GlobalFunctionCode>EAI</GlobalFunctionCode>
+	<GlobalDocumentFunctionCode>
+		<!-- U_EAIMT103 ou U_EAIMT920 -->
+	</GlobalDocumentFunctionCode>
+	<GlobalDocumentFunctionDescription>
+		<!-- "Documento de Entrada" ou "Documento de Saída" -->
+	</GlobalDocumentFunctionDescription>
+	<DocVersion>1.000</DocVersion>
+	<DocDateTime>2020-10-20T08:38:56Z</DocDateTime>
+	<DocIdentifier>326f6cae-b288-5e36-0046-f5a518121110</DocIdentifier>
+	<DocCompany>01</DocCompany>
+	<DocBranch>
+		<!-- Código da Empresa/Filial no formato: “EEFFFF” -->
+	</DocBranch>
+	<DocName/>
+	<DocFederalID/>
+	<DocType>1</DocType>
+	<Message>
+		<Layouts>
+			<Identifier>
+				<!-- U_EAIMT103 ou U_EAIMT920 -->
+			</Identifier>
+			<Version>1.0</Version>
+			<FunctionCode>
+				<!-- U_EAIMT103 ou U_EAIMT920 -->
+			</FunctionCode>
+			<Content>
+				<!-- Conteúdo do xml correspondente ao Documento de Entrado ou Documento de Saída -->
+			</Content>
+		</Layouts>
+	</Message>
+</TOTVSIntegrator>	

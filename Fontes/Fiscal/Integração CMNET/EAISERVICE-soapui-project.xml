@@ -54,9 +54,7 @@
    <soapenv:Header/>
    <soapenv:Body>
       <tot:RECEIVEMESSAGE>
-         <tot:INMSG><![CDATA[
-         
-         <?xml version="1.0" encoding="UTF-8"?>
+         <tot:INMSG><![CDATA[ 
 <TOTVSIntegrator>
 	<GlobalProduct>PRODUTO XPTO</GlobalProduct>
 	<GlobalFunctionCode>EAI</GlobalFunctionCode>
@@ -64,7 +62,7 @@
 	<GlobalDocumentFunctionDescription>ROTINA DE INTEGRAÇÃO</GlobalDocumentFunctionDescription>
 	<DocVersion>1.000</DocVersion>
 	<DocDateTime>2014-11-05T15:38:56Z</DocDateTime>
-	<DocIdentifier>246f6cae-b288-5e36-0046-f5a518121110</DocIdentifier>
+	<DocIdentifier>336f6cae-b288-5e36-0046-f5a518121110</DocIdentifier>
 	<DocCompany>99</DocCompany>
 	<DocBranch>01</DocBranch>
 	<DocName/>
@@ -76,51 +74,47 @@
 			<Version>1.0</Version>
 			<FunctionCode>U_EAIMT103</FunctionCode>
 			<Content>
-<EAIMT103>
-	<F1_FORMUL>N</F1_FORMUL>
-	<F1_TIPO>N</F1_TIPO>
-	<F1_DOC>0000005</F1_DOC>
-	<F1_SERIE>1</F1_SERIE>
-	<F1_EMISSAO>20201015</F1_EMISSAO>
-	<F1_DTDIGIT>20201015</F1_DTDIGIT>
-	<F1_FORNECE>F00001</F1_FORNECE>
-	<F1_LOJA>01</F1_LOJA>
-	<F1_ESPECIE>CTE</F1_ESPECIE>
-	<F1_COND>000</F1_COND>
-	<F1_DESPESA>10</F1_DESPESA>
-	<F1_DESCONT>0</F1_DESCONT>
-	<F1_SEGURO>0</F1_SEGURO>
-	<F1_FRETE>0</F1_FRETE>
-	<F1_MOEDA>1</F1_MOEDA>
-	<F1_TXMOEDA>1</F1_TXMOEDA>
-	<F1_STATUS>A</F1_STATUS>
-	<ITENS>
-		<ITEM>
-			<D1_ITEM>0001</D1_ITEM>
-			<D1_COD>NOT0001</D1_COD>
-			<D1_UM>UN</D1_UM>
-			<D1_LOCAL>00</D1_LOCAL>
-			<D1_QUANT>1</D1_QUANT>
-			<D1_VUNIT>7508.33</D1_VUNIT>
-			<D1_TOTAL>7508.33</D1_TOTAL>
-			<D1_TES>151</D1_TES>
-		</ITEM>
-		<ITEM>
-			<D1_ITEM>0002</D1_ITEM>
-			<D1_COD>NOT0001</D1_COD>
-			<D1_QUANT>1</D1_QUANT>
-			<D1_VUNIT>7508.33</D1_VUNIT>
-			<D1_TOTAL>7508.33</D1_TOTAL>
-			<D1_TES>151</D1_TES>
-		</ITEM>
-	</ITENS>
-</EAIMT103>
+				<EAIMT103>
+					<F1_FORMUL>N</F1_FORMUL>
+					<F1_TIPO>N</F1_TIPO>
+					<F1_DOC>0000002</F1_DOC>
+					<F1_SERIE>1</F1_SERIE>
+					<F1_EMISSAO>20201015</F1_EMISSAO>
+					<F1_DTDIGIT>20201015</F1_DTDIGIT>
+					<F1_FORNECE>F00001</F1_FORNECE>
+					<F1_LOJA>01</F1_LOJA>
+					<F1_ESPECIE>CTE</F1_ESPECIE>
+					<F1_COND>000</F1_COND>
+					<F1_DESPESA>10</F1_DESPESA>
+					<F1_DESCONT>0</F1_DESCONT>
+					<F1_SEGURO>0</F1_SEGURO>
+					<F1_FRETE>0</F1_FRETE>
+					<F1_MOEDA>1</F1_MOEDA>
+					<F1_TXMOEDA>1</F1_TXMOEDA>
+					<F1_STATUS>A</F1_STATUS>
+					<ITENS>
+						<ITEM>
+							<D1_ITEM>0001</D1_ITEM>
+							<D1_COD>NOT0001</D1_COD>
+							<D1_QUANT>1</D1_QUANT>
+							<D1_VUNIT>7508.33</D1_VUNIT>
+							<D1_TOTAL>7508.33</D1_TOTAL>
+							<D1_TES>151</D1_TES>
+						</ITEM>
+						<ITEM>
+							<D1_ITEM>0002</D1_ITEM>
+							<D1_COD>NOT0001</D1_COD>
+							<D1_QUANT>1</D1_QUANT>
+							<D1_VUNIT>7508.33</D1_VUNIT>
+							<D1_TOTAL>7508.33</D1_TOTAL>
+							<D1_TES>151</D1_TES>
+						</ITEM>
+					</ITENS>
+				</EAIMT103>
 			</Content>
 		</Layouts>
 	</Message>
 </TOTVSIntegrator>	
-         
-         
          ]]]]>><![CDATA[</tot:INMSG>
       </tot:RECEIVEMESSAGE>
    </soapenv:Body>

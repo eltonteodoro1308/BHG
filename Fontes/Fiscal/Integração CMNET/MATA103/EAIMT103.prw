@@ -1,8 +1,7 @@
-
 #Include "totvs.ch"
 
 /*/{Protheus.doc} EAIMT103
-Função utilizada patra inclusão de documentos de entrada pelo execauto mata103 integrados do CMNET e por intermédio do EAI
+Função utilizada para inclusão de documentos de entrada pelo execauto mata103 integrados do CMNET e por intermédio do EAI
 @type user function
 @version 12.1.27
 @author elton.alves@totvs.com.br
@@ -96,13 +95,11 @@ static function MontaItens( oXml, aItens )
 
 		aAdd( aLinha, { 'D1_ITEM'   ,      oXml:_EAIMT103:_ITENS:_ITEM:_D1_ITEM:TEXT    , nil } )
 		aAdd( aLinha, { 'D1_COD'    ,      oXml:_EAIMT103:_ITENS:_ITEM:_D1_COD:TEXT     , nil } )
-		aAdd( aLinha, { 'D1_UM'     ,      oXml:_EAIMT103:_ITENS:_ITEM:_D1_UM:TEXT      , nil } )
-		aAdd( aLinha, { 'D1_LOCAL'  ,      oXml:_EAIMT103:_ITENS:_ITEM:_D1_LOCAL:TEXT   , nil } )
 		aAdd( aLinha, { 'D1_QUANT'  , Val( oXml:_EAIMT103:_ITENS:_ITEM:_D1_QUANT:TEXT ) , nil } )
 		aAdd( aLinha, { 'D1_VUNIT'  , Val( oXml:_EAIMT103:_ITENS:_ITEM:_D1_VUNIT:TEXT ) , nil } )
 		aAdd( aLinha, { 'D1_TOTAL'  , Val( oXml:_EAIMT103:_ITENS:_ITEM:_D1_TOTAL:TEXT ) , nil } )
 		aAdd( aLinha, { 'D1_TES'    ,      oXml:_EAIMT103:_ITENS:_ITEM:_D1_TES:TEXT     , nil } )
-		aAdd( aLinha, { 'D1_RATEIO' ,      oXml:_EAIMT103:_ITENS:_ITEM:_D1_RATEIO:TEXT  , nil } )
+
 
 		aAdd( aItens, aLinha )
 
@@ -132,7 +129,7 @@ static function ExAutMt103( aCabec, aItens, cError )
 	Local cSerie  := PadR( aCabec[ aScan( aCabec, { | item | item[ 1 ] == 'F1_SERIE'   } ) ][ 2 ], TamSx3( 'F1_SERIE'   )[ 1 ] )
 	Local cFornec := PadR( aCabec[ aScan( aCabec, { | item | item[ 1 ] == 'F1_FORNECE' } ) ][ 2 ], TamSx3( 'F1_FORNECE' )[ 1 ] )
 	Local cLoja   := PadR( aCabec[ aScan( aCabec, { | item | item[ 1 ] == 'F1_LOJA'    } ) ][ 2 ], TamSx3( 'F1_LOJA'    )[ 1 ] )
-	Local cTipo   := 'N' //PadR( aCabec[ aScan( aCabec, { | item | item[ 1 ] == 'F1_TIPO'    } ) ][ 2 ], TamSx3( 'F1_TIPO'    )[ 1 ] )
+	Local cTipo   := 'N' 
 
 	Private lMsErroAuto    := .F.
 	Private lMsHelpAuto    := .T.

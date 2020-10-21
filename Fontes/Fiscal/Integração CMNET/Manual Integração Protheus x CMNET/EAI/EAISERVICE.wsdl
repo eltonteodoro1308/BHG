@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated 20201021 06:12:22 by ADVPL WSDL Server 1.110216 / Protheus 7.00.191205P-20201012 -->
+<definitions xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:s0="http://www.totvs.com/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" targetNamespace="http://www.totvs.com/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.totvs.com/">
+      <s:element name="RECEIVEMESSAGE">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="INMSG" type="s:string"/>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="RECEIVEMESSAGERESPONSE">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="RECEIVEMESSAGERESULT" type="s:string"/>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </types>
+  <message name="RECEIVEMESSAGESOAPIN">
+    <part name="parameters" element="s0:RECEIVEMESSAGE"/>
+  </message>
+  <message name="RECEIVEMESSAGESOAPOUT">
+    <part name="parameters" element="s0:RECEIVEMESSAGERESPONSE"/>
+  </message>
+  <portType name="EAISERVICESOAP">
+    <operation name="RECEIVEMESSAGE">
+      <documentation>Metodo que recebe mensagens para processamento pelo Microsiga Protheus</documentation> 
+      <input message="s0:RECEIVEMESSAGESOAPIN"/>
+      <output message="s0:RECEIVEMESSAGESOAPOUT"/>
+    </operation>
+  </portType>
+  <binding name="EAISERVICESOAP" type="s0:EAISERVICESOAP">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+    <operation name="RECEIVEMESSAGE">
+      <soap:operation soapAction="http://www.totvs.com/RECEIVEMESSAGE" style="document"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+  </binding>
+  <service name="EAISERVICE">
+    <documentation>&lt;b&gt;Serviço genérico de integração com o Microsiga Protheus via EAI&lt;/b&gt;</documentation> 
+    <port name="EAISERVICESOAP" binding="s0:EAISERVICESOAP">
+      <soap:address location="http://localhost:10003/EAISERVICE.apw"/>
+    </port>
+  </service>
+</definitions>
