@@ -62,7 +62,7 @@
 	<GlobalDocumentFunctionDescription>ROTINA DE INTEGRAÇÃO</GlobalDocumentFunctionDescription>
 	<DocVersion>1.000</DocVersion>
 	<DocDateTime>2014-11-05T15:38:56Z</DocDateTime>
-	<DocIdentifier>336f6cae-b288-5e36-0046-f5a518121110</DocIdentifier>
+	<DocIdentifier>536f6cae-b288-5e36-0046-f6a518121310</DocIdentifier>
 	<DocCompany>99</DocCompany>
 	<DocBranch>01</DocBranch>
 	<DocName/>
@@ -77,11 +77,11 @@
 				<EAIMT103>
 					<F1_FORMUL>N</F1_FORMUL>
 					<F1_TIPO>N</F1_TIPO>
-					<F1_DOC>0000002</F1_DOC>
+					<F1_DOC>0000091</F1_DOC>
 					<F1_SERIE>1</F1_SERIE>
 					<F1_EMISSAO>20201015</F1_EMISSAO>
 					<F1_DTDIGIT>20201015</F1_DTDIGIT>
-					<F1_FORNECE>F00001</F1_FORNECE>
+					<F1_FORNECE>F00099</F1_FORNECE>
 					<F1_LOJA>01</F1_LOJA>
 					<F1_ESPECIE>CTE</F1_ESPECIE>
 					<F1_COND>000</F1_COND>

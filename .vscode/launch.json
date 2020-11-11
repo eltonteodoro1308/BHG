@@ -32,7 +32,22 @@
 			"args": [],
 			"label": "U_tstmt920",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "SIGACFG",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "SIGACTB",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "U_TCTBM001",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "U_tstmt920"
+	"lastProgramExecuted": "SIGAMDI"
 }
