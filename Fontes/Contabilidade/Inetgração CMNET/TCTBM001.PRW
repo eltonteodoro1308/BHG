@@ -80,151 +80,93 @@ Rotina que realiza efetivamente a importacao
 */
 Static Function TCTB03(oSelf)
 
-	Local cLin		:= ""
+	local cLinha   := ''
+	local cItem    := ''
+	local aLctos   := {}
+	local nPos     := 0
+	local dData    := ctod('')
+	local cTipo    := ''
+	local cConta   := ''
+	local cCCusto  := ''
+	local cItemCtb := ''
+	local nValor   := 0
+	local cHist    := ''
+	local nX       := 0
+
+	Private lMsErroAuto    := .F.
+	//Private lMsHelpAuto    := .T.
+	//Private lAutoErrNoFile := .T.
 
 	//Posiciona no inicio do arquivo
 	FT_FGOTOP()
-	nLinha := 0
-
-    c_Buffer := Alltrim(FT_FREADLN())
-
-    a_Buffer := {}
-    
-    AADD(a_Buffer,SubStr(c_Buffer,1,10))     //Data
-    AADD(a_Buffer,SubStr(c_Buffer,12,1))     //D-Debito / C-credito
-    AADD(a_Buffer,SubStr(c_Buffer,29,210))   //Historico
-    AADD(a_Buffer,'0'+SubStr(c_Buffer,239,17))   //Conta Contabil
-    AADD(a_Buffer,SubStr(c_Buffer,257,17))   //Valor
-    AADD(a_Buffer,SubStr(c_Buffer,229,10))   //Centro de Custo
-    //colocar o centro de custo
-	aCabecalho := { { 'DDATALANC' , Ctod(a_Buffer[01]), Nil } , { 'CLOTE' , '000001' , Nil } }
-	aItens     := {}
-    d_Data     := Ctod(a_Buffer[01])
-    l_GravaCtb := .F.
 
 	Do While ( !FT_FEOF() )
-	   oSelf:IncRegua1("Processando Arquivo")
-       //adson 11.10.2017 não faz se tiver valor zerado 
-       If Val(a_Buffer[05])>0
-       If d_Data = Ctod(a_Buffer[01]) 
-  	      nLinha := nLinha + 1
 
-		  Aadd( aItens ,{ {'CT2_DATA'  , Ctod(a_Buffer[01])                  , Nil},;
-		    			  {'CT2_LINHA' , StrZero( nLinha , 3 )               , Nil},;
-			  			  {'CT2_DC'    , IIF(a_Buffer[02]="D",1,2)           , Nil},;
-                          {'CT2_TPSALD','1'                                   , Nil},;
-						  {'CT2_DEBITO', IIF(a_Buffer[02]="D",a_Buffer[04],""), Nil},;
-						  {'CT2_CREDIT', IIF(a_Buffer[02]="C",a_Buffer[04],""), Nil},;
-						  {'CT2_VALOR' , Val(a_Buffer[05])                    , Nil},;
-						  {'CT2_ORIGEM', "TCTBM001"                           , Nil},; 
-						  {'CT2_CCD'   , IIF(a_Buffer[02]="D",a_Buffer[06],""), Nil},; 
-						  {'CT2_CCC'   , IIF(a_Buffer[02]="C",a_Buffer[06],""), Nil},; 
-						  {'CT2_HIST'  , SemAcento(Alltrim(a_Buffer[03]))     , Nil}})
+		oSelf:IncRegua1("Processando Arquivo")
 
-          l_GravaCtb := .T.
-       Else
-          If l_GravaCtb
-	         lMSErroAuto := .F.
+		cLinha := FT_FREADLN()
 
-   	         MSExecAuto( {| X , Y , Z | CTBA102( X , Y , Z )} , aCabecalho , aItens , 3 )
+		dData    := cToD( SubStr( cLinha, 1, 10 ) )
+		cTipo    := If( SubStr( cLinha, 12, 1 ) == 'D', '1', '2' )
+		cConta   := SubStr( cLinha, 239, 17 )
+		cCCusto  := SubStr( cLinha, 229, 10 )
+		cItemCtb := '0'
+		nValor   := Val( SubStr( cLinha, 257, 17 ) )
+		cHist    := NoAcento( AllTrim( SubStr( cLinha, 29, 210 ) ) )
 
-             If lMSErroAuto
-                MostraErro()
-             EndIf
-             
+		nPos := aScan( aLctos, { | item | item[1] == dData } )
 
-  	         aCabecalho := { { 'DDATALANC' , Ctod(a_Buffer[01]) , Nil } , { 'CLOTE' , '000001' , Nil } }
-	         aItens     := {}
-             d_Data     := Ctod(a_Buffer[01])
-  		     nLinha     := 0
-  	         l_GravaCtb := .T.
+		if nPos == 0
 
-  	      nLinha := nLinha + 1
+			aAdd( aLctos, {  dData, {} } )
 
-		  Aadd( aItens ,{ {'CT2_DATA'  , Ctod(a_Buffer[01])                   , Nil},;
-		    			  {'CT2_LINHA' , StrZero( nLinha , 3 )                 , Nil},;
-			  			  {'CT2_DC'    , IIF(a_Buffer[02]="D",1,2)            , Nil},;
-                          {'CT2_TPSALD','1'                                    , Nil},;
-						  {'CT2_DEBITO', IIF(a_Buffer[02]="D",a_Buffer[04],""), Nil},;
-						  {'CT2_CREDIT', IIF(a_Buffer[02]="C",a_Buffer[04],""), Nil},;
-						  {'CT2_VALOR' , Val(a_Buffer[05])                     , Nil},;
-						  {'CT2_ORIGEM', "TCTBM001"                            , Nil},;
-						  {'CT2_HIST'  , SemAcento(Alltrim(a_Buffer[05]))     , Nil}})
+			nPos := Len( aLctos )
 
-          EndIf
-       EndIf
-       Endif
-	   //Proxima linha
-	   FT_FSKIP()
+		end if
 
-       c_Buffer := Alltrim(FT_FREADLN())
+		cItem := StrZero( Len( aLctos[nPos][2] ) + 1, 3 )
 
-       a_Buffer := {}
+		aAdd( aLctos[nPos][2], {;
+			{'CT2_LINHA' , cItem                          , nil },;
+			{'CT2_DC'    , cTipo                          , nil },;
+			{'CT2_TPSALD', '1'                            , nil },;
+			{'CT2_DEBITO', If( cTipo=='1', cConta, '' )   , nil },;
+			{'CT2_CREDIT', If( cTipo=='2', cConta, '' )   , nil },;
+			{'CT2_VALOR' , nValor                         , nil },;
+			{'CT2_ORIGEM', 'TCTBM001'                     , nil },;
+			{'CT2_CCD'   , If( cTipo=='1', cCCusto, '' )  , nil },;
+			{'CT2_CCC'   , If( cTipo=='2', cCCusto, '' )  , nil },;
+			{'CT2_ITEMD' , If( cTipo=='1', cItemCtb, '' ) , nil },;
+			{'CT2_ITEMC' , If( cTipo=='2', cItemCtb, '' ) , nil },;
+			{'CT2_HIST'  , cHist                          , nil }})
 
-       AADD(a_Buffer,SubStr(c_Buffer,1,10))     //Data
-       AADD(a_Buffer,SubStr(c_Buffer,12,1))     //D-Debito / C-credito
-       AADD(a_Buffer,SubStr(c_Buffer,29,210))   //Historico
-       AADD(a_Buffer,'0'+SubStr(c_Buffer,239,17))   //Conta Contabil
-       AADD(a_Buffer,SubStr(c_Buffer,257,17))   //Valor       
-       AADD(a_Buffer,SubStr(c_Buffer,229,10))   //Centro de Custo       
-    EndDo
+		FT_FSKIP()
 
-	lMSErroAuto := .F.
+	End Do
 
-    If l_GravaCtb
-	   MSExecAuto( {| X , Y , Z | CTBA102( X , Y , Z )} , aCabecalho , aItens , 3 )
-    EndIf
+	Begin Transaction
 
-	If lMSErroAuto
-		MostraErro()
-	EndIf
-Return()
+		for nX := 1 to Len( aLctos )
 
-Static Function SemAcento(cString)
-Local cChar  := ""
-Local nX     := 0 
-Local nY     := 0
-Local cVogal := "aeiouAEIOU"
-Local cAgudo := "áéíóú"+"ÁÉÍÓÚ"
-Local cCircu := "âêîôû"+"ÂÊÎÔÛ"
-Local cTrema := "äëïöü"+"ÄËÏÖÜ"
-Local cCrase := "àèìòù"+"ÀÈÌÒÙº" 
-Local cTio   := "ãõ"
-Local cCecid := "çÇ"
+			MSExecAuto( {| X , Y , Z | CTBA102( X , Y , Z )} ,;
+				{ { 'DDATALANC' , aLctos[nX][1] , Nil } , { 'CLOTE' , '000001' , Nil } } ,;
+				aLctos[nX][2] , 3 )
 
-For nX:= 1 To Len(cString)
-	cChar:=SubStr(cString, nX, 1)
-	IF cChar$cAgudo+cCircu+cTrema+cCecid+cTio+cCrase
-		nY:= At(cChar,cAgudo)
-		If nY > 0
-			cString := StrTran(cString,cChar,SubStr(cVogal,nY,1))
-		EndIf
-		nY:= At(cChar,cCircu)
-		If nY > 0
-			cString := StrTran(cString,cChar,SubStr(cVogal,nY,1))
-		EndIf
-		nY:= At(cChar,cTrema)
-		If nY > 0
-			cString := StrTran(cString,cChar,SubStr(cVogal,nY,1))
-		EndIf
-		nY:= At(cChar,cCrase)
-		If nY > 0
-			cString := StrTran(cString,cChar,SubStr(cVogal,nY,1))
-		EndIf		
-		nY:= At(cChar,cTio)
-		If nY > 0
-			cString := StrTran(cString,cChar,SubStr("ao",nY,1))
-		EndIf		
-		nY:= At(cChar,cCecid)
-		If nY > 0
-			cString := StrTran(cString,cChar,SubStr("cC",nY,1))
-		EndIf
-	Endif
-Next
-For nX:=1 To Len(cString)
-	cChar:=SubStr(cString, nX, 1)
-	If Asc(cChar) < 32 .Or. Asc(cChar) > 123
-		cString:=StrTran(cString,cChar,".")
-	Endif
-Next nX
-Return cString
+			If lMsErroAuto
+
+				lMsErroAuto := .F.
+
+				MsgAlert( 'Ocorreu um erro durante a importação a mesma será interrompida.', 'Atenção !!!' )
+				mostraErro()
+
+				DisarmTransaction()
+
+				Exit
+
+			end if
+
+		Next nX
+
+	End Transaction
+
+Return
