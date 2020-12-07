@@ -47,7 +47,27 @@
 			"args": [],
 			"label": "U_TCTBM001",
 			"description": ""
+		},
+		{
+			"args": [],
+			"label": "u_texte001",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "u_teste001",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "MT120BRW",
+			"description": ""
+		},
+		{
+			"args": [],
+			"label": "u_MT120BRW",
+			"description": ""
 		}
 	],
-	"lastProgramExecuted": "SIGAMDI"
+	"lastProgramExecuted": "u_MT120BRW"
 }

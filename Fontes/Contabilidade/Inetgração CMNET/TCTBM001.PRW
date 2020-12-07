@@ -85,6 +85,7 @@ Static Function TCTB03(oSelf)
 	local aLctos   := {}
 	local nPos     := 0
 	local dData    := ctod('')
+	local cDoc     := ''
 	local cTipo    := ''
 	local cConta   := ''
 	local cCCusto  := ''
@@ -92,6 +93,7 @@ Static Function TCTB03(oSelf)
 	local nValor   := 0
 	local cHist    := ''
 	local nX       := 0
+	local nTamanho := 0
 
 	Private lMsErroAuto    := .F.
 	//Private lMsHelpAuto    := .T.
@@ -107,6 +109,7 @@ Static Function TCTB03(oSelf)
 		cLinha := FT_FREADLN()
 
 		dData    := cToD( SubStr( cLinha, 1, 10 ) )
+		cDoc     := SubStr( cLinha, 377, 8 )
 		cTipo    := If( SubStr( cLinha, 12, 1 ) == 'D', '1', '2' )
 		cConta   := SubStr( cLinha, 239, 17 )
 		cCCusto  := SubStr( cLinha, 229, 10 )
@@ -114,19 +117,35 @@ Static Function TCTB03(oSelf)
 		nValor   := Val( SubStr( cLinha, 257, 17 ) )
 		cHist    := NoAcento( AllTrim( SubStr( cLinha, 29, 210 ) ) )
 
-		nPos := aScan( aLctos, { | item | item[1] == dData } )
+		nPos := aScan( aLctos, { | item | item[1] == dData .and. item[2] == cDoc} )
 
 		if nPos == 0
 
-			aAdd( aLctos, {  dData, {} } )
+			aAdd( aLctos, {  dData, cDoc, {} } )
 
 			nPos := Len( aLctos )
 
 		end if
 
-		cItem := StrZero( Len( aLctos[nPos][2] ) + 1, 3 )
+		nTamanho := Len( aLctos[nPos][3] ) + 1
 
-		aAdd( aLctos[nPos][2], {;
+		if nTamanho <= 999
+
+			cItem := StrZero( nTamanho, 3 )
+
+		else
+
+			cItem := '999'
+
+			for nX := 1 to nTamanho - 999
+
+				cItem := soma1( cItem )
+
+			next nX
+
+		end if
+
+		aAdd( aLctos[nPos][3], {;
 			{'CT2_LINHA' , cItem                          , nil },;
 			{'CT2_DC'    , cTipo                          , nil },;
 			{'CT2_TPSALD', '1'                            , nil },;
@@ -148,15 +167,22 @@ Static Function TCTB03(oSelf)
 
 		for nX := 1 to Len( aLctos )
 
-			MSExecAuto( {| X , Y , Z | CTBA102( X , Y , Z )} ,;
-				{ { 'DDATALANC' , aLctos[nX][1] , Nil } , { 'CLOTE' , '000001' , Nil } } ,;
-				aLctos[nX][2] , 3 )
+			dData := aLctos[nX][1]
+			cDoc  := PadL( AllTrim( aLctos[nX][2] ), 6, '0' )
+
+			MsgRun ( dToc( dData ) + ' - ' + cDoc, 'Processando...', {||;
+				MSExecAuto( {| X , Y , Z | CTBA102( X , Y , Z )} ,{;
+				{ 'DDATALANC' , dData  , nil } ,;
+				{ 'CLOTE'     , '9900' , nil } ,;
+				{ 'CSUBLOTE'  , '001'  , nil } ,;
+				{ 'CDOC'      , cDoc   , nil } };
+				,aLctos[nX][3] , 3 ) } )
 
 			If lMsErroAuto
 
 				lMsErroAuto := .F.
 
-				MsgAlert( 'Ocorreu um erro durante a importação a mesma será interrompida.', 'Atenção !!!' )
+				MsgAlert( 'Ocorreu um erro durante a importação -> ' + dToc( dData ) + ' - ' + cDoc, 'Atenção !!!' )
 				mostraErro()
 
 				DisarmTransaction()

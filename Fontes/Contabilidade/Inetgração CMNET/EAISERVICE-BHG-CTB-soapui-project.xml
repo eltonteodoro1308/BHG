@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="a5300d4f-7b72-415e-86c7-7c5bb429a6cf" activeEnvironment="Default" name="EAISERVICE_BHG_CTB" soapui-version="5.5.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" id="e80516ca-b70c-44c9-b7b1-db077a00a4f8" wsaVersion="NONE" name="EAISERVICESOAP" type="wsdl" bindingName="{http://www.totvs.com/}EAISERVICESOAP" soapVersion="1_1" anonymous="optional" definition="http://10.4.1.15:8081/ws/EAISERVICE.apw?WSDL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="http://10.4.1.15:8081/ws/EAISERVICE.apw?WSDL"><con:part><con:url>http://10.4.1.15:8081/ws/EAISERVICE.apw?WSDL</con:url><con:content><![CDATA[<!--Generated 20201201 10:40:15 by ADVPL WSDL Server 1.110216 / Protheus 7.00.191205P-20200424-->
+<definitions targetNamespace="http://www.totvs.com/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:s0="http://www.totvs.com/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns="http://schemas.xmlsoap.org/wsdl/">
+  <types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.totvs.com/">
+      <s:element name="RECEIVEMESSAGE">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="INMSG" type="s:string"/>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:element name="RECEIVEMESSAGERESPONSE">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="1" maxOccurs="1" name="RECEIVEMESSAGERESULT" type="s:string"/>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+    </s:schema>
+  </types>
+  <message name="RECEIVEMESSAGESOAPIN">
+    <part name="parameters" element="s0:RECEIVEMESSAGE"/>
+  </message>
+  <message name="RECEIVEMESSAGESOAPOUT">
+    <part name="parameters" element="s0:RECEIVEMESSAGERESPONSE"/>
+  </message>
+  <portType name="EAISERVICESOAP">
+    <operation name="RECEIVEMESSAGE">
+      <documentation>Metodo que recebe mensagens para processamento pelo Microsiga Protheus</documentation>
+      <input message="s0:RECEIVEMESSAGESOAPIN"/>
+      <output message="s0:RECEIVEMESSAGESOAPOUT"/>
+    </operation>
+  </portType>
+  <binding name="EAISERVICESOAP" type="s0:EAISERVICESOAP">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" style="document"/>
+    <operation name="RECEIVEMESSAGE">
+      <soap:operation soapAction="http://www.totvs.com/RECEIVEMESSAGE" style="document"/>
+      <input>
+        <soap:body use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+  </binding>
+  <service name="EAISERVICE">
+    <documentation>&lt;b>Serviço genérico de integração com o Microsiga Protheus via EAI&lt;/b></documentation>
+    <port name="EAISERVICESOAP" binding="s0:EAISERVICESOAP">
+      <soap:address location="http://10.4.1.15:8081/ws/EAISERVICE.apw"/>
+    </port>
+  </service>
+</definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://10.4.1.15:8081/ws/EAISERVICE.apw</con:endpoint></con:endpoints><con:operation id="0a96c1fd-b15d-4867-9420-f226d2ba9c3b" isOneWay="false" action="http://www.totvs.com/RECEIVEMESSAGE" name="RECEIVEMESSAGE" bindingOperationName="RECEIVEMESSAGE" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call id="bec74aca-ec4e-4d2f-8f23-97c7d01b7ded" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://10.4.1.15:8081/ws/EAISERVICE.apw</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tot="http://www.totvs.com/">\r
+   <soapenv:Header/>\r
+   <soapenv:Body>\r
+      <tot:RECEIVEMESSAGE>\r
+         <tot:INMSG><![CDATA[
+
+<TOTVSMessage>
+	<MessageInformation version="3.000">
+		<Product version="1.000" name="CMNET" />
+		<BranchId>01</BranchId>
+		<GeneratedOn>2020-11-30</GeneratedOn>
+		<Enterprise />
+		<CompanyId>30</CompanyId>
+		<BusinessUnitySharingMode />
+		<UUID>98B3420B-45D4-4FEF-B625-98C416D972E9</UUID>
+		<Type>BusinessMessage</Type>
+		<BranchSharingMode />
+		<BusinessUnit />
+		<SourceApplication>VHF</SourceApplication>
+		<UserId />
+		<Transaction>AccountingEntry</Transaction>
+		<StandardVersion>1.000</StandardVersion>
+		<CompanySharingMode />
+		<DeliveryType>Async</DeliveryType>
+	</MessageInformation>
+	<BusinessMessage>
+		<BusinessEvent>
+			<Entity>AccountingEntry</Entity>
+			<Event>upsert</Event>
+		</BusinessEvent>
+		<BusinessContent>
+			<BatchNumber>999999</BatchNumber>
+			<InternalId>30|01|1</InternalId>
+			<BranchId>01</BranchId>
+			<PeriodEndDate>2020-11-30</PeriodEndDate>
+			<OriginCode>25</OriginCode>
+			<CurrentMessageNumber>0001</CurrentMessageNumber>
+			<SubLot>001</SubLot>
+			<CompanyId>30</CompanyId>
+			<CompanyInternalId>30|01</CompanyInternalId>
+			<PeriodStartDate>2020-11-30</PeriodStartDate>
+			<TotalNumberOfMessages>0001</TotalNumberOfMessages>
+			<Document>85414</Document>
+			<Entries>
+				<Entry>
+					<MovementDate>2020-06-15</MovementDate>
+					<ComplementaryHistory>TESTE EAI</ComplementaryHistory>
+					<ItemType>3</ItemType>
+					
+					<DebitAccountCode>41101001</DebitAccountCode>
+					<DebitAccountInternalId>30|01|41101001</DebitAccountInternalId>
+					<CostCenterCode>21101</CostCenterCode>
+					<CostCenterDebitInternalId>30|01|21101</CostCenterDebitInternalId>
+					<AccountingItemDebitCode>0</AccountingItemDebitCode>
+					<AccountingItemDebitInternalId>30|01|0</AccountingItemDebitInternalId>
+					
+					<CreditAccountCode>41101002</CreditAccountCode>
+					<CreditAccountInternalId>30|01|41101002</CreditAccountInternalId>
+					<CostCenterCreditCode>21102</CostCenterCreditCode>
+					<CostCenterCreditInternalId>30|01|21102</CostCenterCreditInternalId>
+					<AccountingItemCreditCode>0</AccountingItemCreditCode>
+					<AccountingItemCreditInternalId>30|01|0</AccountingItemCreditInternalId>
+					
+					<Item>1</Item>
+					<CurrencyCode>01</CurrencyCode>
+					<EntryValue>99999.99</EntryValue>
+					</Entry>
+<Entry>
+					<MovementDate>2020-06-15</MovementDate>
+					<ComplementaryHistory>TESTE EAI</ComplementaryHistory>
+					<ItemType>3</ItemType>
+					
+					<DebitAccountCode>41101001</DebitAccountCode>
+					<DebitAccountInternalId>30|01|41101001</DebitAccountInternalId>
+					<CostCenterCode>21101</CostCenterCode>
+					<CostCenterDebitInternalId>30|01|21101</CostCenterDebitInternalId>
+					<AccountingItemDebitCode>0</AccountingItemDebitCode>
+					<AccountingItemDebitInternalId>30|01|0</AccountingItemDebitInternalId>
+					
+					<CreditAccountCode>41101002</CreditAccountCode>
+					<CreditAccountInternalId>30|01|41101002</CreditAccountInternalId>
+					<CostCenterCreditCode>21102</CostCenterCreditCode>
+					<CostCenterCreditInternalId>30|01|21102</CostCenterCreditInternalId>
+					<AccountingItemCreditCode>0</AccountingItemCreditCode>
+					<AccountingItemCreditInternalId>30|01|0</AccountingItemCreditInternalId>
+					
+					<Item>2</Item>
+					<CurrencyCode>01</CurrencyCode>
+					<EntryValue>99999.99</EntryValue>
+					
+				</Entry>
+			</Entries>
+		</BusinessContent>
+	</BusinessMessage>
+</TOTVSMessage>
+         ]]]]>><![CDATA[</tot:INMSG>\r
+      </tot:RECEIVEMESSAGE>\r
+   </soapenv:Body>\r
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.totvs.com/RECEIVEMESSAGE"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/></con:soapui-project>

@@ -1,0 +1,92 @@
+<TOTVSMessage>
+	<MessageInformation version="3.000">
+		<Product version="1.000" name="CMNET" />
+		<BranchId>01</BranchId>
+		<GeneratedOn>2020-11-30</GeneratedOn>
+		<Enterprise />
+		<CompanyId>30</CompanyId>
+		<BusinessUnitySharingMode />
+		<UUID>454000C2-88ED-4DFF-AEE4-78E8717B4715</UUID>
+		<Type>BusinessMessage</Type>
+		<BranchSharingMode />
+		<BusinessUnit />
+		<SourceApplication>VHF</SourceApplication>
+		<UserId />
+		<Transaction>AccountingEntry</Transaction>
+		<StandardVersion>1.000</StandardVersion>
+		<CompanySharingMode />
+		<DeliveryType>Async</DeliveryType>
+	</MessageInformation>
+	<BusinessMessage>
+		<BusinessEvent>
+			<Entity>AccountingEntry</Entity>
+			<Event>upsert</Event>
+		</BusinessEvent>
+		<BusinessContent>
+			<BatchNumber>999999</BatchNumber>
+			<InternalId>30|01|1</InternalId>
+			<BranchId>01</BranchId>
+			<PeriodEndDate>2020-11-30</PeriodEndDate>
+			<OriginCode>25</OriginCode>
+			<CurrentMessageNumber>0001</CurrentMessageNumber>
+			<SubLot>001</SubLot>
+			<CompanyId>30</CompanyId>
+			<CompanyInternalId>30|01</CompanyInternalId>
+			<PeriodStartDate>2020-11-30</PeriodStartDate>
+			<TotalNumberOfMessages>0001</TotalNumberOfMessages>
+			<Document>85414</Document>
+			<Entries>
+				<Entry>
+					<MovementDate>2020-06-15</MovementDate>
+					<ComplementaryHistory>TESTE EAI</ComplementaryHistory>
+					<ItemType>3</ItemType>
+					<BalanceType>1</BalanceType>
+					
+					<!-- Debito -->
+					<DebitAccountCode>41101001</DebitAccountCode>
+					<DebitAccountInternalId>30|01|41101001</DebitAccountInternalId>
+					<CostCenterCode>21101</CostCenterCode>
+					<CostCenterDebitInternalId>30|01|21101</CostCenterDebitInternalId>
+					<AccountingItemDebitCode>0</AccountingItemDebitCode>
+					<AccountingItemDebitInternalId>30|01|0</AccountingItemDebitInternalId>
+					<!--  <ClassValueDebitCode></ClassValueDebitCode>  -->
+					<!--  <ClassValueDebitInternalId>30|01|</ClassValueDebitInternalId>  -->
+					
+					<!-- Credito -->
+					<CreditAccountCode>41101002</CreditAccountCode>
+					<CreditAccountInternalId>30|01|41101002</CreditAccountInternalId>
+					<CostCenterCreditCode>21102</CostCenterCreditCode>
+					<CostCenterCreditInternalId>30|01|21102</CostCenterCreditInternalId>
+					<AccountingItemCreditCode>0</AccountingItemCreditCode>
+					<AccountingItemCreditInternalId>30|01|0</AccountingItemCreditInternalId>
+					<!--<ClassValueCreditCode></ClassValueCreditCode>-->
+					<!--<ClassValueCreditInternalId>30|01|</ClassValueCreditInternalId>-->
+					<Item>1</Item>
+					<CurrencyCode>01</CurrencyCode>
+					<EntryValue>99999.99</EntryValue>
+				</Entry>
+				<Entry>
+					<MovementDate>2020-06-15</MovementDate>
+					<ComplementaryHistory>TESTE EAI</ComplementaryHistory>
+					<ItemType>3</ItemType>
+					<BalanceType>1</BalanceType>
+					<DebitAccountCode>41101001</DebitAccountCode>
+					<DebitAccountInternalId>30|01|41101001</DebitAccountInternalId>
+					<CostCenterCode>21101</CostCenterCode>
+					<CostCenterDebitInternalId>30|01|21101</CostCenterDebitInternalId>
+					<AccountingItemDebitCode>0</AccountingItemDebitCode>
+					<AccountingItemDebitInternalId>30|01|0</AccountingItemDebitInternalId>
+					<CreditAccountCode>41101002</CreditAccountCode>
+					<CreditAccountInternalId>30|01|41101002</CreditAccountInternalId>
+					<CostCenterCreditCode>21102</CostCenterCreditCode>
+					<CostCenterCreditInternalId>30|01|21102</CostCenterCreditInternalId>
+					<AccountingItemCreditCode>0</AccountingItemCreditCode>
+					<AccountingItemCreditInternalId>30|01|0</AccountingItemCreditInternalId>
+					<Item>2</Item>
+					<CurrencyCode>01</CurrencyCode>
+					<EntryValue>99999.99</EntryValue>
+				</Entry>
+			</Entries>
+		</BusinessContent>
+	</BusinessMessage>
+</TOTVSMessage>

@@ -531,7 +531,7 @@ static function JaImportado( oJsonCabec )
     Local aArea    := GetArea()
     Local aAreaSC7 := SC7->( GetArea() )
 
-    SC7->( DBOrderNickname( 'SC7SIESRV' ) )
+    SC7->( DBOrderNickname( 'SC7SIENGE' ) )
     If SC7->( DBSeek( cValTochar( oJsonCabec['id'] ) ) )
 
         oJsonCabec['C7_NUM'] := SC7->C7_NUM
